@@ -1,1 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>🎁 小小彩蛋</title>
+<style>
+  :root{--pink:#ff4d6d;--bg1:#fff4f7;--bg2:#fff;--ink:#222;}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,Roboto,Helvetica,Arial;
+       background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink)}
+  .wrap{max-width:800px;margin:0 auto;padding:22px}
+  .card{background:#fff;border-radius:20px;box-shadow:0 10px 30px rgba(255,0,80,.08);padding:22px;margin-bottom:16px}
+  h1{margin:8px 0 6px}.center{text-align:center}
+  .lock{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .btn{padding:12px 16px;border-radius:999px;background:var(--pink);color:#fff;border:none;font-weight:600}
+  .btn:active{transform:scale(.98)}
+  .hidden{display:none}
+  .timeline{border-left:3px solid #ffd5e0;padding-left:12px}
+  .item{margin:10px 0}.item b{background:#ffe5eb;border-radius:8px;padding:2px 8px;margin-right:6px}
+  .footer{opacity:.6;text-align:center;margin-top:10px}
+</style>
 
+<div class="wrap">
+  <div class="card center">
+    <h1>彩蛋时间 🎈</h1>
+    <div class="lock">
+      <div>把手指按住下面按钮 <b>2 秒</b> 解锁悄悄话</div>
+      <button class="btn" id="hold">按住我解锁</button>
+      <div id="hint" class="hidden">解锁成功！🥳</div>
+    </div>
+  </div>
+
+  <div id="secret" class="card hidden">
+    <h2>写给你的话</h2>
+    <p style="line-height:1.9">
+      你十八岁这天，我想把喜欢讲得慢一些。<br>
+      想起第一次聊天、第一次并肩走夜路、第一次分享歌单——<br>
+      世界很吵的时候，请记得回头，我一直在你身后。<br>
+      也愿你在未来的很多次“第一次”里，都能笑出声来。
+    </p>
+    <h2>小小时间线</h2>
+    <div class="timeline">
+      <div class="item"><b>Day 1</b> 认识你的那天，晚风刚刚好。</div>
+      <div class="item"><b>Day 29</b> 第一次一起吃披萨，我假装不紧张。</div>
+      <div class="item"><b>Day 73</b> 你说想学摄影，我认真把相机擦了三遍。</div>
+      <div class="item"><b>Today</b> 祝你十八岁生日快乐，未来请多多指教。</div>
+    </div>
+  </div>
+
+  <div class="footer">如果这页让你笑了一下，那我的愿望达成啦。</div>
+</div>
+
+<script>
+  const hold = document.getElementById('hold');
+  const hint = document.getElementById('hint');
+  const secret = document.getElementById('secret');
+  let timer=null;
+  function start(){ timer=setTimeout(()=>{ hint.classList.remove('hidden'); secret.classList.remove('hidden'); if(navigator.vibrate) navigator.vibrate(40); }, 2000); }
+  function cancel(){ clearTimeout(timer); }
+  ['mousedown','touchstart'].forEach(e=> hold.addEventListener(e,start));
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(e=> hold.addEventListener(e,cancel));
+</script>
+</html>
