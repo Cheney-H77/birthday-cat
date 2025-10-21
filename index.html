@@ -201,7 +201,12 @@
     }catch(_){}
   }
   function doOnce(cls){ kitty.classList.add(cls); setTimeout(()=>kitty.classList.remove(cls), 1000); }
-  function randomAct(){ ["spin","jump","runL","runR"].map(a=>a)[Math.random()*4|0] |> (a=>doOnce(a)); }
+  function randomAct(){
+  const acts = ["spin","jump","runL","runR"];
+  const a = acts[Math.floor(Math.random() * acts.length)];
+  doOnce(a);
+}
+
   setInterval(randomAct, 4500);
   kitty.addEventListener("click", ()=>{ meow(); doOnce("shake"); popHearts(12); });
 </script>
