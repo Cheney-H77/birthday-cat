@@ -95,6 +95,8 @@
   .front{background:linear-gradient(180deg,var(--gradA),#fff)}
   .front b{font-size:18px;color:#8a6b3f}
   .back{transform:rotateY(180deg);background:#fff url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22><text x=%220%22 y=%2214%22>🐾</text></svg>') 8px 8px/20px 20px no-repeat}
+  /* 关键：翻面效果 */
+  .card3d.flipped{ transform:rotateY(180deg) }
 
   /* 弹层 */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:16px}
@@ -143,7 +145,11 @@
   <div class="card">
     <div class="topbar">
       <h2 class="center" style="margin:0">18 个小心愿 & 夸夸卡</h2>
-      <div class="muted"><span id="progressText">已解锁 0/18</span></div>
+      <div class="muted">
+        <span id="progressText">已解锁 0/18</span>
+        <!-- 新增一个很小的随机翻牌按钮（只改这块 UI） -->
+        <button id="randBtn" class="pill" style="margin-left:8px;">随机翻一张</button>
+      </div>
     </div>
     <div class="progress" aria-label="翻牌进度"><div id="progressBar"></div></div>
     <div class="grid18" id="grid18"></div>
@@ -224,7 +230,7 @@
   }
   renderCount(); setInterval(renderCount,1000);
 
-  /* ===== 翻牌渲染 + 进度条 + 成就解锁 ===== */
+  /* ===== 翻牌渲染 + 进度条 + 成就解锁（18 张） ===== */
   const WISHES = [
     "愿你永远被温柔以待，也温柔待己。","考试顺利，睡眠香甜，常常笑出酒窝。",
     "一路有人相伴，回头也有星光。","吃喜欢的甜点，不喜欢的烦恼通通拜拜。",
@@ -234,14 +240,21 @@
     "天气刚刚好，口袋装下一整片月光。","照片都好看，镜子更诚实。",
     "旅途一路平安，返程也满载欢喜。","身体健健康康，胃口开开，睡眠满分。",
     "每一天都能遇见一点小惊喜。","不被焦虑追着跑，被温暖拥着走。",
-    "愿你所念皆如愿，所行化坦途。","获得一只小猫 🐱"
+    "既见君子，云胡不喜","既见佳人，何其不悦"
   ];
   const grid = document.getElementById("grid18");
   const progressText = document.getElementById("progressText");
   const progressBar = document.getElementById("progressBar");
   const eggBtn = document.getElementById("eggBtn");
-  const stored = JSON.parse(localStorage.getItem(STORAGE.flipped) || "[]");
-  const opened = new Set(stored);
+
+  function loadOpened(){
+    try{
+      const arr = JSON.parse(localStorage.getItem(STORAGE.flipped) || "[]");
+      // 过滤非法索引，避免旧脏数据影响
+      return new Set(arr.filter(n=>Number.isInteger(n) && n>=0 && n<18));
+    }catch(e){ return new Set() }
+  }
+  const opened = loadOpened();
 
   function updateProgress(){
     const n = opened.size;
@@ -249,12 +262,9 @@
     progressBar.style.width = Math.round(n/18*100)+"%";
     if(n>=18){
       if(!localStorage.getItem(STORAGE.eggUnlocked)){
-        // 弹层提示 & 解锁按钮
         localStorage.setItem(STORAGE.eggUnlocked, "1");
         showModal("achieveModal");
         unlockEgg();
-        // 可选：通知你（需要后端或 webhook；留接口）
-        // if (WEBHOOK_URL) fetch(WEBHOOK_URL, {method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({type:"achieve", ts:Date.now(), ua:navigator.userAgent})});
       } else {
         unlockEgg();
       }
@@ -264,29 +274,42 @@
   }
   function lockEgg(){ eggBtn.classList.add("disabled"); eggBtn.setAttribute("aria-disabled","true"); eggBtn.textContent="🎁 彩蛋（未解锁）"; }
   function unlockEgg(){ eggBtn.classList.remove("disabled"); eggBtn.removeAttribute("aria-disabled"); eggBtn.textContent="🎁 彩蛋（已解锁）"; }
-
-  // 初始解锁状态
   if(localStorage.getItem(STORAGE.eggUnlocked)) unlockEgg();
 
-  // 渲染卡片
-  WISHES.forEach((text,idx)=>{
-    const cell = document.createElement("div"); cell.className="flip";
-    const isOpen = opened.has(idx);
-    cell.innerHTML = `
-      <div class="card3d ${isOpen?'flipped':''}">
-        <div class="face front"><b>#${idx+1}</b></div>
-        <div class="face back">${text}</div>
-      </div>`;
-    cell.addEventListener("click", ()=>{
-      const card = cell.firstElementChild;
-      const wasOpen = card.classList.toggle("flipped");
-      if(wasOpen){ opened.add(idx); } else { opened.delete(idx); }
-      localStorage.setItem(STORAGE.flipped, JSON.stringify([...opened]));
-      updateProgress();
-    });
-    grid.appendChild(cell);
-  });
+  function renderCards(){
+    grid.innerHTML = "";
+    for(let idx=0; idx<18; idx++){
+      const cell = document.createElement("div"); cell.className="flip";
+      const isOpen = opened.has(idx);
+      cell.innerHTML = `
+        <div class="card3d ${isOpen?'flipped':''}">
+          <div class="face front"><b>#${idx+1}</b></div>
+          <div class="face back">${WISHES[idx]}</div>
+        </div>`;
+      cell.addEventListener("click", ()=>{
+        const card = cell.firstElementChild;
+        const willOpen = !card.classList.contains("flipped"); // 点击前状态
+        card.classList.toggle("flipped");
+        if(willOpen){ opened.add(idx); } else { opened.delete(idx); }
+        localStorage.setItem(STORAGE.flipped, JSON.stringify([...opened]));
+        updateProgress();
+      });
+      grid.appendChild(cell);
+    }
+  }
+  renderCards();
   updateProgress();
+
+  // 随机翻一张（未翻的）
+  document.getElementById('randBtn').addEventListener('click', ()=>{
+    const candidates = [];
+    for(let i=0;i<18;i++){ if(!opened.has(i)) candidates.push(i); }
+    if(!candidates.length) return;
+    const idx = candidates[Math.floor(Math.random()*candidates.length)];
+    // 触发该卡片的 click
+    const cell = grid.children[idx];
+    cell.click();
+  });
 
   // 成就弹层
   document.getElementById("goEgg").onclick = ()=> location.href="./307/";
@@ -390,6 +413,3 @@
   const s2=document.createElement("style"); s2.textContent=`@keyframes rise{from{transform:translateY(0) scale(.6);opacity:1}to{transform:translateY(-120vh) scale(1.2);opacity:0}}`; document.head.appendChild(s2);
 </script>
 </html>
-
-
-
