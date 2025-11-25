@@ -34,7 +34,7 @@
   .box{min-width:72px;padding:10px 12px;border-radius:12px;background:#fff5f7;border:1px solid #ffd5e0;text-align:center}
   .box b{font-size:20px;display:block}
 
-  /* 舞台（猫 + 礼物盒） */
+  /* 舞台（猫） */
   .stage{height:300px;position:relative;overflow:hidden;margin-top:6px}
   .kitty{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);width:min(65vw,320px)}
   .kitty img{width:100%;height:auto;border-radius:20px;box-shadow:0 10px 20px rgba(0,0,0,.12)}
@@ -59,7 +59,7 @@
   .shake{animation:shake .45s ease-in-out}
   @keyframes shake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(calc(-50% - 6px),-50%)}75%{transform:translate(calc(-50% + 6px),-50%)}}
   .tail-fast{animation:tailfast .6s linear 3}
-  @keyframes tailfast{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(0)}} /* 仅作占位，用class触发 */
+  @keyframes tailfast{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(0)}} /* 占位 */
 
   /* 跑动脚印 */
   .paw{position:absolute;width:20px;height:20px;opacity:.9;transform:translate(-50%,-50%) rotate(-20deg);animation:pawfade 1.3s ease-out forwards}
@@ -67,16 +67,6 @@
   .paw:before{width:10px;height:8px;left:5px;top:8px;border-radius:50%}
   .paw:after{width:4px;height:4px;left:1px;top:0;box-shadow:8px 0 0 #d3bfa0, 14px 3px 0 #d3bfa0, 6px 3px 0 #d3bfa0}
   @keyframes pawfade{from{opacity:.9}to{opacity:0;transform:translate(-50%,-60%) rotate(-20deg)}}
-
-  /* 礼物盒（呼吸 + 开盖） */
-  .gift{position:absolute;left:10%;bottom:10px;width:110px;height:110px;cursor:pointer}
-  .gift .box{position:absolute;inset:18px 0 0 0;background:linear-gradient(180deg,#fff,#f7e8d0);border:2px solid #bfa06a;border-radius:14px;box-shadow:var(--shadow)}
-  .gift .ribbon{position:absolute;left:50%;top:18px;width:14px;height:92px;background:#ff8dad;transform:translateX(-50%)}
-  .gift .top{position:absolute;left:-10px;right:-10px;top:0;height:28px;background:#f9e6c6;border:2px solid #bfa06a;border-radius:10px;box-shadow:var(--shadow);transform-origin:bottom center}
-  .gift.breath{animation:breath 2.2s ease-in-out infinite}
-  @keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-  .gift.open .top{animation:lift .6s ease-out forwards}
-  @keyframes lift{to{transform:translateY(-26px) rotate(-12deg)}}
 
   /* 翻牌网格 + 渐变美化 + 进度条 */
   .topbar{display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px}
@@ -95,7 +85,6 @@
   .front{background:linear-gradient(180deg,var(--gradA),#fff)}
   .front b{font-size:18px;color:#8a6b3f}
   .back{transform:rotateY(180deg);background:#fff url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22><text x=%220%22 y=%2214%22>🐾</text></svg>') 8px 8px/20px 20px no-repeat}
-  /* 关键：翻面效果 */
   .card3d.flipped{ transform:rotateY(180deg) }
 
   /* 弹层 */
@@ -120,13 +109,7 @@
       <div class="hot earR"  data-act="ear"></div>
       <div class="hot head"  data-act="head"></div>
       <div class="hot tail"  data-act="tail"></div>
-
-      <!-- 会呼吸的礼物盒（点击开盖→彩带→跳转 /307） -->
-      <div class="gift breath" id="gift">
-        <div class="top"></div>
-        <div class="box"></div>
-        <div class="ribbon"></div>
-      </div>
+      <!-- 礼物盒已按你的要求从主页移除 -->
     </div>
 
     <h1 id="title">Happy 18th Birthday 🎂</h1>
@@ -147,7 +130,6 @@
       <h2 class="center" style="margin:0">18 个小心愿 & 夸夸卡</h2>
       <div class="muted">
         <span id="progressText">已解锁 0/18</span>
-        <!-- 新增一个很小的随机翻牌按钮（只改这块 UI） -->
         <button id="randBtn" class="pill" style="margin-left:8px;">随机翻一张</button>
       </div>
     </div>
@@ -186,8 +168,19 @@
     eggUnlocked: "bc_egg_unlocked"
   };
 
-  /* ===== 打字机短句 ===== */
-  const msg = `今天是你的18岁，小猫准备了 18 张夸夸卡和一个神秘彩蛋。先翻几张试试？也可以点礼物盒直接开场～`;
+  /* ===== 一次性重置旧翻牌状态（确保首次进入全部是背面） ===== */
+  (function resetOnce(){
+    const FLAG="bc_reset_20251125";
+    try{
+      if(!localStorage.getItem(FLAG)){
+        localStorage.removeItem(STORAGE.flipped);
+        localStorage.setItem(FLAG,"1");
+      }
+    }catch(e){}
+  })();
+
+  /* ===== 打字机短句（删去“也可以点礼物直接开场”） ===== */
+  const msg = `今天是你的18岁，小猫准备了 18 张夸夸卡和一个神秘彩蛋。先翻几张试试？`;
   (function type(){ const el=document.getElementById("type"); let i=0; (function t(){ if(i<=msg.length){ el.textContent=msg.slice(0,i++); setTimeout(t,24);} })(); })();
 
   /* ===== 倒计时 & 生日当天特别动作 ===== */
@@ -218,7 +211,6 @@
     }else{
       document.getElementById("title").textContent = "Happy 18! 🎉";
       countdownEl.innerHTML = `<span class="pill">今天是你的主场！</span>`;
-      // 连续表演：转圈→跳→左右跑 + 加倍彩带
       seqAct(["spin","jump","runL","runR"]);
       dropConfetti(260);
     }
@@ -250,7 +242,6 @@
   function loadOpened(){
     try{
       const arr = JSON.parse(localStorage.getItem(STORAGE.flipped) || "[]");
-      // 过滤非法索引，避免旧脏数据影响
       return new Set(arr.filter(n=>Number.isInteger(n) && n>=0 && n<18));
     }catch(e){ return new Set() }
   }
@@ -288,7 +279,7 @@
         </div>`;
       cell.addEventListener("click", ()=>{
         const card = cell.firstElementChild;
-        const willOpen = !card.classList.contains("flipped"); // 点击前状态
+        const willOpen = !card.classList.contains("flipped");
         card.classList.toggle("flipped");
         if(willOpen){ opened.add(idx); } else { opened.delete(idx); }
         localStorage.setItem(STORAGE.flipped, JSON.stringify([...opened]));
@@ -306,7 +297,6 @@
     for(let i=0;i<18;i++){ if(!opened.has(i)) candidates.push(i); }
     if(!candidates.length) return;
     const idx = candidates[Math.floor(Math.random()*candidates.length)];
-    // 触发该卡片的 click
     const cell = grid.children[idx];
     cell.click();
   });
@@ -321,7 +311,6 @@
   const kittyImg = document.getElementById("kittyImg");
   const stage = document.getElementById("stage");
 
-  // WebAudio：喵 + 呼噜
   let audioCtx = null;
   function ensureCtx(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
   function meow(){ try{
@@ -349,9 +338,8 @@
     const a = acts[Math.floor(Math.random()*acts.length)];
     doOnce(a);
   }
-  setInterval(randomAct, 10000); // 每 10 秒自动一次
+  setInterval(randomAct, 10000);
 
-  // 跑动脚印：在舞台里撒 3~5 个
   function paws(){
     const n = 3 + Math.floor(Math.random()*3);
     for(let i=0;i<n;i++){
@@ -363,16 +351,14 @@
     }
   }
 
-  // 热点交互
   function shake(){ doOnce("shake"); }
   document.querySelectorAll(".hot").forEach(h=> {
     const act = h.dataset.act;
     h.addEventListener("click", ()=>{
-      if(act==="ear"){ shake(); }            // 耳朵抖两下（用 shake 表达）
-      if(act==="tail"){ doOnce("tail-fast"); } // 尾巴加速（class 占位，便于换成分层图时换动画）
-      if(act==="head"){ meow(); shake(); }   // 轻点头：喵 + 抖
+      if(act==="ear"){ shake(); }
+      if(act==="tail"){ doOnce("tail-fast"); }
+      if(act==="head"){ meow(); shake(); }
     });
-    // 头：长按呼噜 + 闭眼（用 shake 代替闭眼占位）
     if(act==="head"){
       let t=null;
       h.addEventListener("touchstart",()=>{ t=setTimeout(()=>{ purr(900); shake(); }, 450); });
@@ -380,24 +366,15 @@
     }
   });
 
-  // 点击小猫整体：喵 + 抖动 + 彩心
   kittyImg.addEventListener("click", ()=>{ meow(); doOnce("shake"); popHearts(10); });
 
-  // 当 run 动作时撒脚印
   ["animationstart","animationend"].forEach(ev=>{
     kitty.addEventListener(ev, e=>{
       if(e.type==="animationstart" && (kitty.classList.contains("runL")||kitty.classList.contains("runR"))) paws();
     });
   });
 
-  /* ===== 会呼吸的礼物盒：点击开盖→彩带→跳转 /307 ===== */
-  const gift = document.getElementById("gift");
-  gift.addEventListener("click", ()=>{
-    gift.classList.remove("breath");
-    gift.classList.add("open");
-    dropConfetti(120);
-    setTimeout(()=> location.href="./307/", 700);
-  });
+  /* 礼物盒逻辑已移除；如果以后彩蛋页需要，单独实现 */
 
   /* ===== 爱心 ===== */
   function popHearts(n=14){
