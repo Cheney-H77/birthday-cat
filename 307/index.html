@@ -25,7 +25,13 @@
 
   /* 转盘（5 扇区） */
   .wheelWrap{display:grid;place-items:center}
-  .wheel{width:min(90vw,340px);height:min(90vw,340px);border-radius:50%;border:10px solid #f2e4c8;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+  .wheel{
+    width:min(90vw,340px);height:min(90vw,340px);
+    border-radius:50%;border:10px solid #f2e4c8;position:relative;overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+    transform:rotate(0deg);               /* 关键：初始 transform，便于过渡触发 */
+    will-change:transform;                /* 关键：提示浏览器优化 */
+  }
   .slice{position:absolute;inset:0;clip-path:polygon(50% 50%, 0 0, 100% 0);display:flex;align-items:flex-start;justify-content:center;padding-top:24px;font-weight:700}
   /* 5 等分，每个 72° */
   .slice:nth-child(1){transform:rotate(0deg);background:#ffe5ec}
@@ -37,11 +43,10 @@
   .spinBtn{margin-top:10px}
   .disabled{opacity:.5;pointer-events:none}
 
-  /* 结果弹层（保留结构，当前不使用兔子奖） */
+  /* 结果弹层 */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:16px}
   .modal.show{display:flex}
   .inner{background:#fff;border-radius:18px;max-width:480px;width:100%;padding:20px;text-align:center}
-  .inner img{max-width:100%;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
 </style>
 
 <div class="wrap">
@@ -69,11 +74,12 @@
         <button class="btn spinBtn" id="spinBtn">开始转</button>
       </div>
       <div class="muted" id="chanceText" style="margin-top:8px">剩余机会：2/2</div>
+      <div class="muted" id="resultLine" style="margin-top:6px"></div>
     </div>
   </div>
 </div>
 
-<!-- 预留弹层（当前未用到图片保存） -->
+<!-- 结果弹层 -->
 <div class="modal" id="resultModal">
   <div class="inner">
     <h2 id="resultTitle">抽到啦</h2>
@@ -84,18 +90,44 @@
 </div>
 
 <script>
-  /* ===== 配置 / 持久化键 ===== */
+  /* ===== 持久化键 ===== */
   const KEY_UNLOCKED = "bc_locker_unlocked";
   const KEY_SPIN_COUNT = "bc_spin_count";   // 已转次数（0,1,2）
+  const KEY_LAST_PRIZE = "bc_last_prize";
   const MAX_SPINS = 2;
 
-  /* ===== 长按解锁（2 秒 + 进度环） ===== */
   const locker = document.getElementById("locker");
   const wheelArea = document.getElementById("wheelArea");
   const holdBtn = document.getElementById("holdBtn");
   const ring = document.getElementById("ring");
   const ringText = document.getElementById("ringText");
 
+  const wheel = document.getElementById("wheel");
+  const spinBtn = document.getElementById("spinBtn");
+  const chanceText = document.getElementById("chanceText");
+  const resultLine = document.getElementById("resultLine");
+
+  const resultModal = document.getElementById("resultModal");
+  const resultTitle = document.getElementById("resultTitle");
+  document.getElementById("closeResult").addEventListener("click", ()=> resultModal.classList.remove("show"));
+  resultModal.addEventListener("click", e=>{ if(e.target===resultModal) resultModal.classList.remove("show"); });
+
+  /* ---------- 恢复状态（不重置） ---------- */
+  function getCount(){
+    try{ return parseInt(localStorage.getItem(KEY_SPIN_COUNT) || "0", 10) }catch{ return 0 }
+  }
+  function setCount(n){
+    try{ localStorage.setItem(KEY_SPIN_COUNT, String(n)); }catch{}
+  }
+  function updateChanceText(){
+    const used = getCount();
+    const left = Math.max(0, MAX_SPINS - used);
+    chanceText.textContent = `剩余机会：${left}/${MAX_SPINS}`;
+    const last = localStorage.getItem(KEY_LAST_PRIZE) || "";
+    resultLine.textContent = last ? `上次结果：${last}` : "";
+    if(left===0){ spinBtn.classList.add("disabled"); spinBtn.textContent="机会已用完"; }
+    else { spinBtn.classList.remove("disabled"); spinBtn.textContent="开始转"; }
+  }
   function showWheel(){
     locker.classList.add("hidden");
     wheelArea.classList.remove("hidden");
@@ -103,17 +135,17 @@
   }
   if(localStorage.getItem(KEY_UNLOCKED)) showWheel();
 
+  /* ---------- 长按 2 秒解锁 ---------- */
   let t=null, start=0, need=2000;
   function updateRing(){
     const elapsed = Date.now()-start;
     const pct = Math.min(elapsed/need, 1);
     const deg = Math.round(pct*360);
     ring.style.background = `conic-gradient(var(--pink) ${deg}deg, #ffd3e1 0deg)`;
-    ringText.textContent = ( (need-elapsed)/1000 ).toFixed(1);
+    ringText.textContent = ((need-elapsed)/1000).toFixed(1);
   }
   function startHold(){
-    start = Date.now();
-    updateRing();
+    start = Date.now(); updateRing();
     t = setInterval(()=>{
       updateRing();
       if(Date.now()-start >= need){
@@ -128,26 +160,8 @@
   ["mousedown","touchstart"].forEach(ev=> holdBtn.addEventListener(ev, startHold));
   ["mouseup","mouseleave","touchend","touchcancel"].forEach(ev=> holdBtn.addEventListener(ev, cancelHold));
 
-  /* ===== 转盘（5 扇区 + Rig 两次） ===== */
-  const wheel = document.getElementById("wheel");
-  const spinBtn = document.getElementById("spinBtn");
-  const chanceText = document.getElementById("chanceText");
-
-  function spinTo(angle, cb){
-    wheel.style.transition="transform 2.2s cubic-bezier(.18,.8,.2,1)";
-    wheel.style.transform=`rotate(${angle}deg)`;
-    wheel.addEventListener("transitionend", function h(){ wheel.removeEventListener("transitionend", h); cb && cb(); }, {once:true});
-  }
-
-  function updateChanceText(){
-    const used = parseInt(localStorage.getItem(KEY_SPIN_COUNT) || "0", 10);
-    const left = Math.max(0, MAX_SPINS - used);
-    chanceText.textContent = `剩余机会：${left}/${MAX_SPINS}`;
-    if(left===0){ spinBtn.classList.add("disabled"); spinBtn.textContent="机会已用完"; }
-  }
-
-  // 5 等分，每扇区 72°；指针在顶部，扇区中心分别为：
-  // 1: 36°, 2:108°, 3:180°, 4:252°, 5:324°
+  /* ---------- 转盘：5 扇区 + 固定两次结果 ---------- */
+  // 5 等分：中心角度 [36,108,180,252,324]
   const sectorCenter = [36,108,180,252,324];
   const prizeName = [
     "再来一次",
@@ -157,41 +171,55 @@
     "给糖豆找一个小玩伴"
   ];
 
+  // 关键：稳定触发过渡的旋转函数（强制重绘 + rAF）
+  function spinTo(targetAngle, cb){
+    const startAngle = wheel._angle || 0;         // 记住上次角度（视觉连续）
+    wheel.style.transition = "none";
+    wheel.style.transform  = `rotate(${startAngle}deg)`; // 回到当前角度
+    void wheel.offsetWidth;                       // 强制重绘
+    requestAnimationFrame(()=>{
+      wheel.style.transition = "transform 2.2s cubic-bezier(.18,.8,.2,1)";
+      wheel.style.transform  = `rotate(${targetAngle}deg)`;
+      wheel.addEventListener("transitionend", function h(){
+        wheel.removeEventListener("transitionend", h);
+        wheel._angle = targetAngle % 360;        // 存一下当前角度
+        cb && cb();
+      }, {once:true});
+    });
+  }
+
   function showResult(name){
-    const m = document.getElementById("resultModal");
-    document.getElementById("resultTitle").textContent = `抽中：${name}`;
-    m.classList.add("show");
+    localStorage.setItem(KEY_LAST_PRIZE, name);
+    resultTitle.textContent = `抽中：${name}`;
+    resultModal.classList.add("show");
+    updateChanceText();
     if(navigator.vibrate) navigator.vibrate(40);
   }
-  document.getElementById("closeResult").addEventListener("click", ()=> {
-    document.getElementById("resultModal").classList.remove("show");
-  });
-  document.getElementById("resultModal").addEventListener("click", e=>{
-    if(e.target.id==="resultModal") e.currentTarget.classList.remove("show");
-  });
 
   spinBtn.addEventListener("click", ()=>{
-    let count = parseInt(localStorage.getItem(KEY_SPIN_COUNT) || "0", 10);
-    if(count >= MAX_SPINS){ updateChanceText(); return; }
+    const used = getCount();
+    if(used >= MAX_SPINS) { updateChanceText(); return; }
 
     const base = 360*4; // 多转几圈更丝滑
-    if(count === 0){
-      // 第一次：给糖豆找一个小玩伴（第 5 扇区：324°）
+    if(used === 0){
+      // 第一次：给糖豆找一个小玩伴（第 5 扇区）
       spinTo(base + sectorCenter[4], ()=>{
         showResult(prizeName[4]);
-        count = 1; localStorage.setItem(KEY_SPIN_COUNT, String(count));
-        updateChanceText();
+        setCount(1);
       });
-    } else if(count === 1){
-      // 第二次：对我说：我好开心！（第 4 扇区：252°）
+    }else if(used === 1){
+      // 第二次：对我说：我好开心！（第 4 扇区）
       spinTo(base + sectorCenter[3], ()=>{
         showResult(prizeName[3]);
-        count = 2; localStorage.setItem(KEY_SPIN_COUNT, String(count));
-        updateChanceText();
+        setCount(2);
       });
     }
   });
+
+  // 初次进入（未解锁时不显示转盘；已解锁则直接按本地状态渲染）
+  updateChanceText();
 </script>
 </html>
+
 
 
