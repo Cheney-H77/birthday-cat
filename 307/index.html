@@ -23,21 +23,21 @@
   .ring span{background:#fff9f3;border-radius:50%;width:62px;height:62px;display:grid;place-items:center;font-weight:700}
   .hidden{display:none}
 
-  /* 转盘 */
+  /* 转盘（5 扇区） */
   .wheelWrap{display:grid;place-items:center}
   .wheel{width:min(90vw,340px);height:min(90vw,340px);border-radius:50%;border:10px solid #f2e4c8;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)}
   .slice{position:absolute;inset:0;clip-path:polygon(50% 50%, 0 0, 100% 0);display:flex;align-items:flex-start;justify-content:center;padding-top:24px;font-weight:700}
+  /* 5 等分，每个 72° */
   .slice:nth-child(1){transform:rotate(0deg);background:#ffe5ec}
-  .slice:nth-child(2){transform:rotate(60deg);background:#fff3d6}
-  .slice:nth-child(3){transform:rotate(120deg);background:#e7f7f1}
-  .slice:nth-child(4){transform:rotate(180deg);background:#ffe5ec}
-  .slice:nth-child(5){transform:rotate(240deg);background:#fff3d6}
-  .slice:nth-child(6){transform:rotate(300deg);background:#e7f7f1}
+  .slice:nth-child(2){transform:rotate(72deg);background:#fff3d6}
+  .slice:nth-child(3){transform:rotate(144deg);background:#e7f7f1}
+  .slice:nth-child(4){transform:rotate(216deg);background:#ffe5ec}
+  .slice:nth-child(5){transform:rotate(288deg);background:#fff3d6}
   .pointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:24px solid var(--tea);margin:10px auto}
   .spinBtn{margin-top:10px}
   .disabled{opacity:.5;pointer-events:none}
 
-  /* 结果弹层 */
+  /* 结果弹层（保留结构，当前不使用兔子奖） */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:16px}
   .modal.show{display:flex}
   .inner{background:#fff;border-radius:18px;max-width:480px;width:100%;padding:20px;text-align:center}
@@ -59,42 +59,35 @@
     <!-- 解锁后的转盘 -->
     <div id="wheelArea" class="wheelWrap hidden">
       <div class="wheel" id="wheel">
-        <div class="slice">再转一次</div>
-        <div class="slice">奶茶一杯</div>
-        <div class="slice">拥抱十秒</div>
-        <div class="slice">再转一次</div>
-        <div class="slice">甜点一份</div>
-        <div class="slice">电影一场</div>
+        <div class="slice">再来一次</div>
+        <div class="slice">一杯奶茶</div>
+        <div class="slice">小猫玩偶</div>
+        <div class="slice">对我说：我好开心！</div>
+        <div class="slice">给糖豆找一个小玩伴</div>
       </div>
       <div class="row">
         <button class="btn spinBtn" id="spinBtn">开始转</button>
       </div>
-      <div class="muted">特等奖隐藏：一只小兔子 / 一只小猫</div>
+      <div class="muted" id="chanceText" style="margin-top:8px">剩余机会：2/2</div>
     </div>
   </div>
 </div>
 
-<!-- “获得一只小兔子”弹层 -->
-<div class="modal" id="rabbitModal">
+<!-- 预留弹层（当前未用到图片保存） -->
+<div class="modal" id="resultModal">
   <div class="inner">
-    <h2>获得一只小兔子 🐰</h2>
-    <img id="rabbitImg" src="" alt="小兔子">
+    <h2 id="resultTitle">抽到啦</h2>
     <div class="row" style="margin-top:10px">
-      <button class="btn" id="saveBtn">保存这张卡片</button>
-      <button class="btn" id="closeRabbit">好耶</button>
+      <button class="btn" id="closeResult">好耶</button>
     </div>
-    <div class="muted" style="margin-top:6px">（长按图片也可保存）</div>
   </div>
 </div>
 
 <script>
-  /* ===== 配置：兔子照片 & 可选上报 ===== */
-  const RABBIT_PHOTO_URL = "../assets/rabbit.jpg"; // 把你的兔子图传到 assets/rabbit.jpg
-  const WEBHOOK_URL = ""; // 需要时填你的 Webhook（Formspree / Apps Script 等）
-
+  /* ===== 配置 / 持久化键 ===== */
   const KEY_UNLOCKED = "bc_locker_unlocked";
-  const KEY_SPIN_COUNT = "bc_spin_count";
-  const KEY_RABBIT_GOT = "bc_rabbit_got";
+  const KEY_SPIN_COUNT = "bc_spin_count";   // 已转次数（0,1,2）
+  const MAX_SPINS = 2;
 
   /* ===== 长按解锁（2 秒 + 进度环） ===== */
   const locker = document.getElementById("locker");
@@ -106,9 +99,8 @@
   function showWheel(){
     locker.classList.add("hidden");
     wheelArea.classList.remove("hidden");
+    updateChanceText();
   }
-
-  // 已解锁直接显示
   if(localStorage.getItem(KEY_UNLOCKED)) showWheel();
 
   let t=null, start=0, need=2000;
@@ -136,18 +128,10 @@
   ["mousedown","touchstart"].forEach(ev=> holdBtn.addEventListener(ev, startHold));
   ["mouseup","mouseleave","touchend","touchcancel"].forEach(ev=> holdBtn.addEventListener(ev, cancelHold));
 
-  /* ===== 转盘（第一次：再转一次；第二次：小兔子；之后禁用） ===== */
+  /* ===== 转盘（5 扇区 + Rig 两次） ===== */
   const wheel = document.getElementById("wheel");
   const spinBtn = document.getElementById("spinBtn");
-  const rabbitModal = document.getElementById("rabbitModal");
-  const rabbitImg = document.getElementById("rabbitImg");
-  const closeRabbit = document.getElementById("closeRabbit");
-  const saveBtn = document.getElementById("saveBtn");
-
-  // 如果已经拿过兔子，直接禁用
-  if(localStorage.getItem(KEY_RABBIT_GOT)){
-    spinBtn.classList.add("disabled"); spinBtn.textContent="已获得小兔子";
-  }
+  const chanceText = document.getElementById("chanceText");
 
   function spinTo(angle, cb){
     wheel.style.transition="transform 2.2s cubic-bezier(.18,.8,.2,1)";
@@ -155,75 +139,58 @@
     wheel.addEventListener("transitionend", function h(){ wheel.removeEventListener("transitionend", h); cb && cb(); }, {once:true});
   }
 
-  function report(payload){
-    if(!WEBHOOK_URL) return;
-    try{ fetch(WEBHOOK_URL,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }catch{}
+  function updateChanceText(){
+    const used = parseInt(localStorage.getItem(KEY_SPIN_COUNT) || "0", 10);
+    const left = Math.max(0, MAX_SPINS - used);
+    chanceText.textContent = `剩余机会：${left}/${MAX_SPINS}`;
+    if(left===0){ spinBtn.classList.add("disabled"); spinBtn.textContent="机会已用完"; }
   }
+
+  // 5 等分，每扇区 72°；指针在顶部，扇区中心分别为：
+  // 1: 36°, 2:108°, 3:180°, 4:252°, 5:324°
+  const sectorCenter = [36,108,180,252,324];
+  const prizeName = [
+    "再来一次",
+    "一杯奶茶",
+    "小猫玩偶",
+    "对我说：我好开心！",
+    "给糖豆找一个小玩伴"
+  ];
+
+  function showResult(name){
+    const m = document.getElementById("resultModal");
+    document.getElementById("resultTitle").textContent = `抽中：${name}`;
+    m.classList.add("show");
+    if(navigator.vibrate) navigator.vibrate(40);
+  }
+  document.getElementById("closeResult").addEventListener("click", ()=> {
+    document.getElementById("resultModal").classList.remove("show");
+  });
+  document.getElementById("resultModal").addEventListener("click", e=>{
+    if(e.target.id==="resultModal") e.currentTarget.classList.remove("show");
+  });
 
   spinBtn.addEventListener("click", ()=>{
     let count = parseInt(localStorage.getItem(KEY_SPIN_COUNT) || "0", 10);
+    if(count >= MAX_SPINS){ updateChanceText(); return; }
 
-    if(localStorage.getItem(KEY_RABBIT_GOT)){
-      spinBtn.classList.add("disabled"); return;
-    }
-
-    // 指针在顶部（0deg），我们让轮盘旋转到目标扇区中心：
-    // 扇区 6 个，每个 60 度。我们设定：
-    // 第一次 -> “再转一次”（在 slice1 或 slice4，任选其一，这里取 slice1 中心 30deg）
-    // 第二次 -> “一只小兔子（隐藏奖）” -> 虽不在 UI 文案中，但我们转到某固定角度后直接触发兔子弹层
-    // 为了视觉统一，第一次转多圈 + 30 度；第二次转多圈 + 15 度（看起来“指到隐藏奖”）
-    const base = 360*4; // 多转几圈好看
-    if(count===0){
-      spinTo(base + 30, ()=>{
-        alert("再转一次～");
-        localStorage.setItem(KEY_SPIN_COUNT, "1");
+    const base = 360*4; // 多转几圈更丝滑
+    if(count === 0){
+      // 第一次：给糖豆找一个小玩伴（第 5 扇区：324°）
+      spinTo(base + sectorCenter[4], ()=>{
+        showResult(prizeName[4]);
+        count = 1; localStorage.setItem(KEY_SPIN_COUNT, String(count));
+        updateChanceText();
       });
-    }else if(count===1){
-      spinTo(base + 15, ()=>{
-        // 触发小兔子
-        localStorage.setItem(KEY_RABBIT_GOT, "1");
-        localStorage.setItem(KEY_SPIN_COUNT, "2");
-        showRabbit();
-        report({type:"rabbit_got", ts:Date.now(), ua:navigator.userAgent});
-        spinBtn.classList.add("disabled"); spinBtn.textContent="已获得小兔子";
+    } else if(count === 1){
+      // 第二次：对我说：我好开心！（第 4 扇区：252°）
+      spinTo(base + sectorCenter[3], ()=>{
+        showResult(prizeName[3]);
+        count = 2; localStorage.setItem(KEY_SPIN_COUNT, String(count));
+        updateChanceText();
       });
-    }else{
-      spinBtn.classList.add("disabled");
     }
   });
-
-  function showRabbit(){
-    rabbitImg.src = RABBIT_PHOTO_URL;
-    rabbitModal.classList.add("show");
-    if(navigator.vibrate) navigator.vibrate(40);
-  }
-  rabbitModal.addEventListener("click", e=>{ if(e.target.id==="rabbitModal") rabbitModal.classList.remove("show"); });
-  closeRabbit.addEventListener("click", ()=> rabbitModal.classList.remove("show"));
-
-  // 保存卡片：把“获得一只小兔子”+ 照片合成 PNG
-  saveBtn.addEventListener("click", async ()=>{
-    const img = new Image(); img.crossOrigin="anonymous"; img.src=RABBIT_PHOTO_URL; await img.decode();
-    const w = 900, h = 1100; const c = document.createElement("canvas"); c.width=w; c.height=h; const ctx=c.getContext("2d");
-    // 背景
-    const grad = ctx.createLinearGradient(0,0,0,h); grad.addColorStop(0,"#fff9f3"); grad.addColorStop(1,"#ffffff"); ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
-    // 标题
-    ctx.fillStyle="#222"; ctx.font="bold 44px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial"; ctx.fillText("获得一只小兔子", 70, 90);
-    // 图片自适应
-    const maxW=w-140, maxH=h-320; let iw=img.width, ih=img.height; const r=Math.min(maxW/iw, maxH/ih); iw*=r; ih*=r;
-    ctx.fillStyle="#fff"; ctx.roundRect(70,120,iw+20,ih+20,18); ctx.fill(); // 背景框
-    ctx.drawImage(img, 80,130,iw,ih);
-    // 说明文字
-    ctx.fillStyle="#7a7a7a"; ctx.font="20px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial";
-    const d=new Date(); const t=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}  ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    ctx.fillText(`领取者：你的小可爱   时间：${t}`, 70, h-80);
-    // 下载
-    const a=document.createElement("a"); a.download="获得一只小兔子.png"; a.href=c.toDataURL("image/png"); a.click();
-  });
-
-  // 兼容 roundRect
-  if(!CanvasRenderingContext2D.prototype.roundRect){
-    CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){ if(typeof r!=="number") r=8; this.beginPath(); this.moveTo(x+r,y); this.arcTo(x+w,y,x+w,y+h,r); this.arcTo(x+w,y+h,x,y+h,r); this.arcTo(x,y+h,x,y,r); this.arcTo(x,y,x+w,y,r); this.closePath(); return this; }
-  }
 </script>
 </html>
 
