@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-<title>Happy 18 • 小猫给你的生日信</title>
+<title>Happy 18 • 给小喵的生日信</title>
 <style>
   /* ===== 1. 全局主题与字体 ===== */
   :root{
@@ -21,14 +21,13 @@
   body{
     font-family: -apple-system, "SF Pro Text", "PingFang SC", "微软雅黑", sans-serif;
     color: var(--ink);
-    /* 动态背景基底 */
     background: #fff9f3;
     overflow-x: hidden;
     padding-bottom: 60px;
     position: relative;
   }
 
-  /* ===== 2. 氛围背景 (流动光晕) ===== */
+  /* 氛围背景 */
   .ambient-light {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: -1; pointer-events: none; overflow: hidden;
@@ -46,7 +45,7 @@
     100% { transform: translate(40px, 60px) scale(1.1); }
   }
 
-  /* ===== 3. 毛玻璃卡片风格 ===== */
+  /* 主容器 */
   .wrap{max-width:860px;margin:0 auto;padding:20px}
   
   .card{
@@ -60,9 +59,10 @@
     transition: transform 0.2s;
   }
 
-  /* 标题：流光金渐变 */
+  /* 修复文字被遮挡：增加标题的层级 */
   h1 {
-    font-size: 28px; font-weight: 800; margin: 10px 0 14px; text-align: center;
+    position: relative; z-index: 5; /* 关键：让文字浮在猫的下方层级之上 */
+    font-size: 26px; font-weight: 800; margin: 10px 0 14px; text-align: center;
     background: linear-gradient(135deg, #d4b073 0%, #b89255 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
@@ -99,24 +99,28 @@
   .box b { font-size: 18px; color: var(--pink); display: block; }
   .box span { font-size: 11px; color: #999; font-weight: 600; letter-spacing: 1px; }
 
-  /* ===== 4. 舞台（猫）与动画 ===== */
-  .stage { height: 280px; position: relative; cursor: pointer; user-select: none; }
+  /* ===== 舞台（猫）修正版 ===== */
+  .stage { height: 260px; position: relative; cursor: pointer; user-select: none; margin-bottom: 10px; }
   
+  /* 修复猫太大：缩小宽度，调整 top */
   .kitty-wrap {
-    position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%);
-    width: min(65vw, 280px); z-index: 2;
+    position: absolute; left: 50%; 
+    top: 52%; /* 稍微往上提一点 */
+    transform: translate(-50%, -50%);
+    width: min(55vw, 220px); /* 之前是 65vw, 280px，现在改小 */
+    z-index: 2;
     transition: transform 0.1s;
   }
   
-  /* 去背景的图建议加个drop-shadow让它更有立体感 */
   .kitty-img {
     width: 100%; height: auto; display: block;
     animation: breathe 3s ease-in-out infinite;
     filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1));
+    border-radius: 20px; /* 如果你是方图没去背景，这个圆角能稍微好看点 */
   }
   
   .shadow {
-    position: absolute; left: 50%; top: 78%; transform: translateX(-50%);
+    position: absolute; left: 50%; top: 82%; transform: translateX(-50%);
     width: 40%; height: 16px; background: radial-gradient(rgba(0,0,0,0.1), transparent 70%);
     animation: shadow-breathe 3s ease-in-out infinite;
   }
@@ -126,29 +130,26 @@
 
   /* 交互动作 */
   .act-jump { animation: jump 0.5s cubic-bezier(0.17, 0.67, 0.6, 1); }
-  @keyframes jump { 0%{top:55%} 50%{top:40%} 100%{top:55%} }
+  @keyframes jump { 0%{top:52%} 50%{top:38%} 100%{top:52%} }
   
   .act-shake .kitty-img { animation: shake 0.4s ease-in-out; }
   @keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-8deg)} 75%{transform:rotate(8deg)} }
 
-  /* ===== 5. 翻牌区域 (精致版) ===== */
+  /* ===== 翻牌区域 ===== */
   .grid18 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-  .card3d {
-    position: relative; aspect-ratio: 0.8; perspective: 1000px; cursor: pointer;
-  }
+  .card3d { position: relative; aspect-ratio: 0.8; perspective: 1000px; cursor: pointer; }
   .card-inner {
     position: relative; width: 100%; height: 100%; text-align: center;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d; border-radius: 16px;
     box-shadow: 0 6px 16px rgba(0,0,0,0.06);
   }
-  /* 翻转状态 */
   .card3d.flipped .card-inner { transform: rotateY(180deg); }
 
   .face {
     position: absolute; inset: 0; backface-visibility: hidden;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 16px; padding: 6px; -webkit-backface-visibility: hidden; /* Safari Fix */
+    border-radius: 16px; padding: 6px; -webkit-backface-visibility: hidden;
   }
   .front {
     background: #fff;
@@ -156,7 +157,6 @@
     border: 2px solid #fff;
   }
   .front b { font-size: 20px; color: #e0d0b8; font-family: "Georgia", serif; }
-  
   .back {
     background: #fff; transform: rotateY(180deg);
     border: 2px solid #ffe5ec; color: #555; font-size: 13px; line-height: 1.4; padding: 10px;
@@ -174,7 +174,6 @@
   .music-btn.playing svg { animation: spin 3s linear infinite; color: var(--pink); }
   @keyframes spin { 100%{transform:rotate(360deg)} }
 
-  /* 粒子特效层 */
   .particles { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
   
   /* 弹窗 */
@@ -196,7 +195,7 @@
 
 <div class="wrap">
   <div class="card center">
-    <div class="sub" id="hi">Hi 学妹，小猫来啦～</div>
+    <div class="sub" id="hi">Hi 小喵，18岁生日快乐哦～</div>
 
     <div class="stage" id="stage">
       <div class="kitty-wrap" id="kittyWrap">
@@ -217,14 +216,12 @@
 
   <div class="card">
     <h2 style="display:flex;align-items:center;justify-content:center;gap:6px;">
-      <span>✨</span> 18 个小心愿 & 夸夸卡 <span>✨</span>
+      <span>✨</span> 18 张小卡牌 <span>✨</span>
     </h2>
     <div class="center muted" style="font-size:13px; color:#999; margin-bottom:15px">
       点亮所有卡片，解锁神秘礼物
     </div>
-    
     <div class="grid18" id="grid18"></div>
-    
     <div class="center" style="margin-top:24px">
       <button class="btn" id="randBtn">✨ 帮我翻一张</button>
     </div>
@@ -245,33 +242,42 @@
 </div>
 
 <div class="particles" id="particles"></div>
-
 <div class="modal" id="achieveModal">
   <div class="inner">
     <h2 style="color:var(--pink)">🎉 成就达成！</h2>
-    <p style="color:#666; margin: 16px 0 24px; line-height:1.6">18 张卡片全部点亮啦<br>快去看看小猫准备了什么？</p>
+    <p style="color:#666; margin: 16px 0 24px; line-height:1.6">18 张卡片全部点亮啦<br>快去看看是什么礼物呢？</p>
     <button class="btn" onclick="location.href='./307/'" style="width:100%">前往彩蛋房间 👉</button>
   </div>
 </div>
 
 <script>
-  /* ================= 配置区 ================= */
-  // 1. 生日日期：自动计算最近的 12-13
-  const targetDateStr = "12-13 00:00:00";
+  /* ===== 修复 NaN 问题：iOS 日期处理 ===== */
+  // 核心修复：不使用 new Date("2025-12-13")，而是手动拼接带斜杠的字符串
   const now = new Date();
-  let year = now.getFullYear();
-  let bd = new Date(year + "-" + targetDateStr.replace(/-/g,'/'));
-  if(now > bd) bd = new Date((year+1) + "-" + targetDateStr.replace(/-/g,'/'));
-  const BIRTHDAY_DATE = bd;
+  const currentYear = now.getFullYear();
+  // 目标月份（0-11）: 11代表12月
+  // 目标日期: 13
+  const targetMonth = 11; 
+  const targetDay = 13;
 
-  // 2. 翻牌文案 (请修改为你给学妹的18句话)
+  let birthdayYear = currentYear;
+  // 如果当前时间已经晚于今年的12月13日，就算明年的
+  const thisYearBirthday = new Date(currentYear, targetMonth, targetDay);
+  if (now > thisYearBirthday) {
+    birthdayYear = currentYear + 1;
+  }
+
+  // 最终生成字符串 "2025/12/13 00:00:00" <- iOS 完美支持斜杠
+  const BIRTHDAY_DATE = new Date(`${birthdayYear}/${targetMonth + 1}/${targetDay} 00:00:00`);
+
+  /* ================= 文案配置 ================= */
   const WISHES = [
-    "愿你永远被温柔以待", "考试顺利，不挂科", "每天都能睡个好觉",
-    "吃不胖体质 Get", "快乐是第一生产力", "偶尔迷路也没关系",
-    "想去的地方都能去", "遇见的所有人都善良", "发量惊人，发际线坚挺",
-    "拥有超能力：百毒不侵", "保持好奇，保持热爱", "今天的你比昨天更可爱",
-    "下雨天都有人送伞", "被喜欢的人坚定选择", "所有烦恼都只是暂时的",
-    "既见君子，云胡不喜", "平安喜乐，万事胜意", "十八岁生日快乐！"
+    "愿小喵永远被温柔以待", "在18岁的晚上<br>思考一下<br>“我想成为一个什么样的人”", "一朵玫瑰正马不停蹄地<br>变成另一朵玫瑰，<br>你是云、是海、是忘却，<br>你也是你曾经失去的<br>每一个自己。",
+    "The world may be full of cheating<br>however<br>we never lack friends with a sincere heart", "所有的青春都像一盏灯<br>在雨中被冲倒<br>湿漉漉却在燃烧", "偶尔迷路也没关系",
+    "给成年的自己，写一张愿望清单", "Tragedy and delight<br>hand in hand.", "让自己登基<br>做风的君王",
+    "今晚我不关心人类，我只想你", "世间万般，永远保持一颗藏满诗的心", "成为充满热爱与好奇的孩子<br>成为终身学习的智者",
+    "Are you still there?<br>Always!", "你瞳孔里一池碎裂的清辉<br>一瞥惊鸿难忘<br>从此芳华乱浮生", "无论世界如何定义<br>你永远是最棒的！",
+    "既见君子，云胡不喜", "既见佳人，何其不悦", "彭玉君，十八岁生日快乐！"
   ];
 
   /* ================= 逻辑区 ================= */
@@ -294,7 +300,7 @@
     document.body.removeEventListener('click', first);
   }, {once:true});
 
-  /* --- 粒子特效 (点击撒花) --- */
+  /* --- 粒子特效 --- */
   function popParticles(x, y, count=12){
     for(let i=0; i<count; i++){
       const el = document.createElement('div');
@@ -303,16 +309,12 @@
       el.style.left = x + 'px'; el.style.top = y + 'px';
       el.style.fontSize = (12 + Math.random()*14) + 'px';
       el.style.pointerEvents = 'none';
-      el.style.userSelect = 'none';
       el.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
       particles.appendChild(el);
-
-      // 随机散开方向
       const angle = Math.random() * 2 * Math.PI;
       const dist = 60 + Math.random() * 80;
       const tx = Math.cos(angle) * dist;
-      const ty = Math.sin(angle) * dist - 60; // 稍微向上飘
-      
+      const ty = Math.sin(angle) * dist - 60;
       requestAnimationFrame(()=>{
         el.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random()*180}deg)`;
         el.style.opacity = '0';
@@ -321,52 +323,33 @@
     }
   }
 
-  /* --- 猫咪互动 --- */
   stage.addEventListener('click', (e)=>{
-    // 动作
     const acts = ['act-jump', 'act-shake'];
     const cls = acts[Math.floor(Math.random()*acts.length)];
     kittyWrap.classList.add(cls);
     setTimeout(()=> kittyWrap.classList.remove(cls), 600);
-    
-    // 特效
     popParticles(e.clientX, e.clientY, 15);
     if(navigator.vibrate) navigator.vibrate(30);
   });
 
-  /* --- 翻牌逻辑 (支持翻回) --- */
   const grid = document.getElementById('grid18');
   const eggBtn = document.getElementById('eggBtn');
   const KEY_FLIPPED = 'bc_flipped_v2';
   const KEY_UNLOCKED = 'bc_egg_unlocked_v2';
-  
   let flippedSet = new Set();
   try{ flippedSet = new Set(JSON.parse(localStorage.getItem(KEY_FLIPPED)) || []); }catch{}
 
-  // 渲染
   WISHES.forEach((txt, i) => {
     const cell = document.createElement('div');
     cell.className = `card3d ${flippedSet.has(i)?'flipped':''}`;
-    cell.innerHTML = `
-      <div class="card-inner">
-        <div class="face front"><b>${i+1}</b></div>
-        <div class="face back">${txt}</div>
-      </div>
-    `;
-    // 点击事件
+    cell.innerHTML = `<div class="card-inner"><div class="face front"><b>${i+1}</b></div><div class="face back">${txt}</div></div>`;
     cell.addEventListener('click', (e)=>{
-      // 粒子
       popParticles(e.clientX, e.clientY, 6);
-      
-      // 翻转逻辑
       if(cell.classList.contains('flipped')){
-        cell.classList.remove('flipped');
-        flippedSet.delete(i);
+        cell.classList.remove('flipped'); flippedSet.delete(i);
       } else {
-        cell.classList.add('flipped');
-        flippedSet.add(i);
+        cell.classList.add('flipped'); flippedSet.add(i);
       }
-      
       localStorage.setItem(KEY_FLIPPED, JSON.stringify([...flippedSet]));
       checkProgress();
     });
@@ -376,49 +359,36 @@
   function checkProgress(){
     const n = flippedSet.size;
     const isUnlocked = localStorage.getItem(KEY_UNLOCKED);
-    
-    // 文字更新
-    eggBtn.textContent = (n>=18 || isUnlocked) 
-      ? "🎁 彩蛋已解锁 (点我进入)" 
-      : `🎁 彩蛋（收集进度 ${n}/18）`;
-      
-    // 状态更新
-    if(n >= 18){
+    eggBtn.textContent = (n>=18 || isUnlocked) ? "🎁 彩蛋已解锁 (点我进入)" : `🎁 彩蛋（收集进度 ${n}/18）`;
+    if(n>=18){
       if(!isUnlocked){
-        // 首次达成
         localStorage.setItem(KEY_UNLOCKED, '1');
         document.getElementById('achieveModal').classList.add('show');
-        // 满屏撒花
         const w=window.innerWidth, h=window.innerHeight;
         for(let k=0;k<5;k++) setTimeout(()=> popParticles(w/2, h/2, 20), k*200);
       }
       eggBtn.classList.remove('disabled');
     } else {
-      // 如果曾经解锁过，就不再锁上了，保持开启
       if(isUnlocked) eggBtn.classList.remove('disabled');
       else eggBtn.classList.add('disabled');
     }
   }
-  checkProgress(); // 初始化检查
+  checkProgress();
 
-  // 随机翻
   document.getElementById('randBtn').onclick = (e) => {
     const unflip = [];
     for(let i=0; i<18; i++) if(!flippedSet.has(i)) unflip.push(i);
-    
     if(unflip.length > 0){
       const idx = unflip[Math.floor(Math.random()*unflip.length)];
-      grid.children[idx].click(); // 触发点击
-      // 滚动到该位置
+      grid.children[idx].click();
       grid.children[idx].scrollIntoView({behavior:'smooth', block:'center'});
     } else {
-      // 全翻开了，弹个提示
       popParticles(e.clientX, e.clientY, 10);
       alert("全都翻开啦！快去点彩蛋吧！");
     }
   }
 
-  /* --- 倒计时与打字机 --- */
+  /* 倒计时修正版 */
   function updateTimer(){
     const diff = BIRTHDAY_DATE - new Date();
     const el = document.getElementById('countdown');
@@ -437,7 +407,7 @@
   }
   setInterval(updateTimer, 1000); updateTimer();
 
-  const msg = "今天是你的18岁生日。翻开下面 18 张卡片，收集小猫的祝福吧！";
+  const msg = "今天是你的18岁生日。翻开下面 18 张卡片，收集祝福吧！";
   let i_type = 0;
   const tEl = document.getElementById('type');
   function type(){
@@ -447,7 +417,6 @@
     }
   }
   setTimeout(type, 600);
-
 </script>
 </body>
 </html>
