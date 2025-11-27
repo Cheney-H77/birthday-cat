@@ -5,114 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <title>Happy 18 • 小猫给你的生日信</title>
 <style>
-  /* ===== 主题配置 ===== */
+  /* ===== 1. 全局主题与字体 ===== */
   :root{
-    --tea:#d4b073; --cream:#fff9f3; --pink:#ff5c8a; --ink:#222; --muted:#7a7a7a;
-    --card:#ffffff; --shadow: 0 10px 30px rgba(0,0,0,.06);
+    --tea: #d4b073; 
+    --pink: #ff5c8a; 
+    --ink: #4a4a4a;
+    --glass: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.8);
+    --shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   }
-  *{box-sizing:border-box} html,body{margin:0} body{
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","微软雅黑",Roboto,Arial;
-    background:linear-gradient(180deg,var(--cream),#fff);
-    color:var(--ink); padding-bottom: 40px;
-  }
-  .wrap{max-width:860px;margin:0 auto;padding:22px}
-  .card{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:22px;margin-bottom:16px}
-  h1{font-size:26px;font-weight:700;margin:6px 0 10px; color: #5a4628;}
-  h2{font-size:18px;margin:0 0 10px;font-weight:700; color: #8a6b3f;}
-  .sub{opacity:.9; font-size: 15px;}.muted{color:var(--muted);font-size:13px}.center{text-align:center}
   
-  /* 按钮与胶囊样式 */
-  .pill{display:inline-block;background:#ffe5ec;padding:8px 12px;border-radius:999px;margin:6px 4px 0 0;font-size:13px;color: var(--pink);}
-  .pill.disabled{opacity:.6;pointer-events:none;filter:grayscale(1);}
-  .btn{display:inline-block;padding:10px 20px;border-radius:999px;background:var(--pink);color:#fff;font-weight:700;border:none;font-size:15px;transition:0.1s;}
-  .btn:active{transform:scale(.96);}
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; height: 100%;}
+  
+  body{
+    font-family: -apple-system, "SF Pro Text", "PingFang SC", "微软雅黑", sans-serif;
+    color: var(--ink);
+    /* 动态背景基底 */
+    background: #fff9f3;
+    overflow-x: hidden;
+    padding-bottom: 60px;
+    position: relative;
+  }
+
+  /* ===== 2. 氛围背景 (流动光晕) ===== */
+  .ambient-light {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1; pointer-events: none; overflow: hidden;
+  }
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(60px); opacity: 0.6;
+    animation: float 20s infinite ease-in-out alternate;
+  }
+  .orb-1 { width: 300px; height: 300px; background: #ffe5ec; top: -50px; left: -50px; animation-delay: 0s; }
+  .orb-2 { width: 250px; height: 250px; background: #fff3d6; bottom: 10%; right: -50px; animation-delay: -5s; }
+  
+  @keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 60px) scale(1.1); }
+  }
+
+  /* ===== 3. 毛玻璃卡片风格 ===== */
+  .wrap{max-width:860px;margin:0 auto;padding:20px}
+  
+  .card{
+    position: relative;
+    background: var(--glass);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 24px; margin-bottom: 20px;
+    transition: transform 0.2s;
+  }
+
+  /* 标题：流光金渐变 */
+  h1 {
+    font-size: 28px; font-weight: 800; margin: 10px 0 14px; text-align: center;
+    background: linear-gradient(135deg, #d4b073 0%, #b89255 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  h2 { font-size: 18px; color: #8a6b3f; text-align: center; margin-bottom: 12px; }
+
+  .sub { text-align: center; font-size: 15px; color: #888; margin-bottom: 10px; }
+  .center { text-align: center; }
+
+  /* 按钮与标签 */
+  .pill {
+    display: inline-block; background: #fff; color: var(--pink);
+    padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 4px 10px rgba(255, 92, 138, 0.15); text-decoration: none;
+    transition: all 0.2s;
+  }
+  .pill.disabled { background: #f0f0f0; color: #ccc; box-shadow: none; pointer-events: none; }
+  
+  .btn {
+    background: linear-gradient(135deg, #ff9fb8, #ff5c8a);
+    color: #fff; padding: 12px 24px; border-radius: 99px; border: none;
+    font-size: 16px; font-weight: 700; box-shadow: 0 8px 20px rgba(255, 92, 138, 0.3);
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: scale(0.96); }
 
   /* 倒计时 */
-  .count{display:flex;justify-content:center;gap:8px;margin:12px 0}
-  .box{min-width:64px;padding:8px 10px;border-radius:12px;background:#fff5f7;border:1px solid #ffd5e0;text-align:center}
-  .box b{font-size:18px;display:block;color:var(--pink)}
-  .box span{font-size:12px;color:#b08d98}
+  .count { display: flex; justify-content: center; gap: 8px; margin: 16px 0; }
+  .box {
+    background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9);
+    padding: 8px 10px; border-radius: 14px; min-width: 60px; text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  }
+  .box b { font-size: 18px; color: var(--pink); display: block; }
+  .box span { font-size: 11px; color: #999; font-weight: 600; letter-spacing: 1px; }
 
-  /* ===== 舞台（猫）优化版 ===== */
-  .stage{height:280px;position:relative;overflow:hidden;margin-top:10px; cursor: pointer;}
+  /* ===== 4. 舞台（猫）与动画 ===== */
+  .stage { height: 280px; position: relative; cursor: pointer; user-select: none; }
   
-  /* 猫咪容器：负责位移 */
-  .kitty-wrap{
-    position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);
-    width:min(60vw, 280px); z-index: 2;
+  .kitty-wrap {
+    position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%);
+    width: min(65vw, 280px); z-index: 2;
+    transition: transform 0.1s;
   }
   
-  /* 猫咪图片：负责形变（呼吸、Q弹） */
-  .kitty-img{
-    width:100%;height:auto; display:block;
-    /* 关键：呼吸感动画，模拟生命力 */
+  /* 去背景的图建议加个drop-shadow让它更有立体感 */
+  .kitty-img {
+    width: 100%; height: auto; display: block;
     animation: breathe 3s ease-in-out infinite;
-    transform-origin: bottom center;
-    /* 建议去背景后，把下面的圆角和阴影去掉，效果更自然。如果没去背景，保留即可 */
-    /* border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,.1); */ 
-    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.15)); /* 给透明PNG加投影 */
+    filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1));
   }
-
-  .shadow{
-    position:absolute;left:50%;top:80%;transform:translateX(-50%);
-    width:40%;height:12px;background:rgba(0,0,0,0.15);
-    border-radius:50%;filter:blur(4px); animation: shadow-breathe 3s ease-in-out infinite;
-  }
-
-  /* 动画定义 */
-  @keyframes breathe { 0%,100%{transform:scale(1,1)} 50%{transform:scale(1.03, 0.97)} } /* 轻微压扁 */
-  @keyframes shadow-breathe { 0%,100%{transform:translateX(-50%) scale(1); opacity: .6} 50%{transform:translateX(-50%) scale(1.05); opacity: .7} }
   
-  /* 动作类：覆盖在 kitty-wrap 上 */
-  .act-jump {animation: jump .6s cubic-bezier(0.17, 0.67, 0.54, 1)}
-  @keyframes jump { 0%{top:56%} 50%{top:40%} 100%{top:56%} }
-  
-  .act-runL {animation: runL 1.2s ease-in-out}
-  @keyframes runL {0%{left:70%} 50%{left:30%} 100%{left:50%}}
-  
-  .act-runR {animation: runR 1.2s ease-in-out}
-  @keyframes runR {0%{left:30%} 50%{left:70%} 100%{left:50%}}
-  
-  .act-shake {animation: shake .4s ease-in-out}
-  @keyframes shake {0%,100%{transform:translate(-50%,-50%) rotate(0)} 25%{transform:translate(-50%,-50%) rotate(-5deg)} 75%{transform:translate(-50%,-50%) rotate(5deg)}}
-
-  /* 走路时图片附加的晃动（Waddle） */
-  .act-runL .kitty-img, .act-runR .kitty-img { animation: waddle 0.3s infinite alternate; }
-  @keyframes waddle { from{transform:rotate(-3deg)} to{transform:rotate(3deg)} }
-
-  /* 翻牌区域 */
-  .grid18{display:grid;grid-template-columns:repeat(3,1fr);gap:8px; margin-top:15px}
-  .card3d{
-    position:relative; aspect-ratio: 3/4; perspective:1000px; cursor:pointer;
-    transform-style:preserve-3d; transition:transform .6s;
+  .shadow {
+    position: absolute; left: 50%; top: 78%; transform: translateX(-50%);
+    width: 40%; height: 16px; background: radial-gradient(rgba(0,0,0,0.1), transparent 70%);
+    animation: shadow-breathe 3s ease-in-out infinite;
   }
-  .card3d.flipped { transform: rotateY(180deg); }
-  .face{
-    position:absolute;inset:0; backface-visibility:hidden; border-radius:12px;
-    display:flex;align-items:center;justify-content:center; padding:8px; text-align:center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05); font-size: 13px; line-height: 1.4;
-  }
-  .front{background:#fff5f7; border: 2px solid #fff;}
-  .front b{font-size:20px; color:#ff9fb8; opacity: .5;}
-  .back{background:#fff; transform:rotateY(180deg); color:#555; border: 2px solid #ffe5ec; overflow:hidden;}
 
-  /* 音乐控制 */
-  .music-btn{
-    position:fixed; right:20px; bottom:20px; width:44px; height:44px; 
-    background:#fff; border-radius:50%; box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    z-index: 100; display:flex; align-items:center; justify-content:center;
-    cursor: pointer; border: 2px solid #eee;
-  }
-  .music-btn.playing img { animation: spin 4s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
+  @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.02, 0.98)} }
+  @keyframes shadow-breathe { 0%,100%{opacity:0.6; transform:translateX(-50%) scale(1)} 50%{opacity:0.8; transform:translateX(-50%) scale(1.1)} }
 
-  /* 弹层 */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px; z-index: 99;}
-  .modal.show{display:flex}
-  .inner{background:#fff;border-radius:18px;max-width:320px;width:100%;padding:24px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.2);}
+  /* 交互动作 */
+  .act-jump { animation: jump 0.5s cubic-bezier(0.17, 0.67, 0.6, 1); }
+  @keyframes jump { 0%{top:55%} 50%{top:40%} 100%{top:55%} }
+  
+  .act-shake .kitty-img { animation: shake 0.4s ease-in-out; }
+  @keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-8deg)} 75%{transform:rotate(8deg)} }
+
+  /* ===== 5. 翻牌区域 (精致版) ===== */
+  .grid18 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+  .card3d {
+    position: relative; aspect-ratio: 0.8; perspective: 1000px; cursor: pointer;
+  }
+  .card-inner {
+    position: relative; width: 100%; height: 100%; text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d; border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  }
+  /* 翻转状态 */
+  .card3d.flipped .card-inner { transform: rotateY(180deg); }
+
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 16px; padding: 6px; -webkit-backface-visibility: hidden; /* Safari Fix */
+  }
+  .front {
+    background: #fff;
+    background-image: radial-gradient(circle at center, #fff9f3 0%, #fff 100%);
+    border: 2px solid #fff;
+  }
+  .front b { font-size: 20px; color: #e0d0b8; font-family: "Georgia", serif; }
+  
+  .back {
+    background: #fff; transform: rotateY(180deg);
+    border: 2px solid #ffe5ec; color: #555; font-size: 13px; line-height: 1.4; padding: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* 音乐按钮 */
+  .music-btn {
+    position: fixed; right: 20px; bottom: 30px; width: 48px; height: 48px;
+    background: #fff; border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 100; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.1s;
+  }
+  .music-btn:active { transform: scale(0.9); }
+  .music-btn.playing svg { animation: spin 3s linear infinite; color: var(--pink); }
+  @keyframes spin { 100%{transform:rotate(360deg)} }
+
+  /* 粒子特效层 */
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+  
+  /* 弹窗 */
+  .modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 2000; padding: 30px;
+  }
+  .modal.show { display: flex; animation: fadeIn 0.3s; }
+  .inner { background: #fff; padding: 30px; border-radius: 24px; text-align: center; width: 100%; max-width: 340px; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 </style>
 </head>
 <body>
+
+<div class="ambient-light">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
 
 <div class="wrap">
   <div class="card center">
@@ -120,66 +200,71 @@
 
     <div class="stage" id="stage">
       <div class="kitty-wrap" id="kittyWrap">
-        <img class="kitty-img" src="./assets/cat.png" alt="生日小猫">
+        <img class="kitty-img" src="./assets/cat.png" alt="可爱小猫">
       </div>
       <div class="shadow"></div>
     </div>
 
-    <h1 id="title">Happy 18th Birthday 🎂</h1>
-    <div id="type" style="min-height:40px; font-size:15px; color:#666; margin: 0 10px;"></div>
+    <h1 id="title">Happy 18th Birthday</h1>
+    <div id="type" style="min-height:42px; font-size:15px; color:#666; margin: 0 10px; line-height:1.6;"></div>
 
     <div class="count" id="countdown"></div>
     
-    <div style="margin-top:15px">
-      <a class="pill disabled" id="eggBtn" href="./307/" target="_self">🎁 彩蛋（解锁进度 0/18）</a>
+    <div style="margin-top:18px">
+      <a class="pill disabled" id="eggBtn" href="./307/" target="_self">🎁 彩蛋（收集进度 0/18）</a>
     </div>
   </div>
 
   <div class="card">
-    <h2 class="center">✨ 18 个小心愿 & 夸夸卡</h2>
-    <div class="center muted" style="margin-bottom:10px">点亮所有卡片，解锁神秘礼物</div>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span>✨</span> 18 个小心愿 & 夸夸卡 <span>✨</span>
+    </h2>
+    <div class="center muted" style="font-size:13px; color:#999; margin-bottom:15px">
+      点亮所有卡片，解锁神秘礼物
+    </div>
     
     <div class="grid18" id="grid18"></div>
     
-    <div class="center" style="margin-top:20px">
-      <button class="btn" id="randBtn" style="background:#d4b073">✨ 帮我翻一张</button>
+    <div class="center" style="margin-top:24px">
+      <button class="btn" id="randBtn">✨ 帮我翻一张</button>
     </div>
   </div>
 
-  <div class="center muted" style="margin-top:20px; opacity: .6;">© 2025 For You.</div>
+  <div class="center muted" style="margin-top:20px; font-size:12px; opacity:0.6;">
+    © 2025 For You.
+  </div>
 </div>
 
 <div class="music-btn" id="musicBtn">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--pink)"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="color:#ccc; transition:color 0.3s">
+    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+  </svg>
   <audio id="bgm" loop>
     <source src="./assets/bgm.mp3" type="audio/mpeg">
   </audio>
 </div>
 
+<div class="particles" id="particles"></div>
+
 <div class="modal" id="achieveModal">
   <div class="inner">
-    <h2>🎉 成就达成！</h2>
-    <p style="color:#666; margin: 15px 0;">18 张卡片全部点亮啦<br>快去看看小猫准备了什么？</p>
-    <button class="btn" onclick="location.href='./307/'">前往彩蛋房间 👉</button>
+    <h2 style="color:var(--pink)">🎉 成就达成！</h2>
+    <p style="color:#666; margin: 16px 0 24px; line-height:1.6">18 张卡片全部点亮啦<br>快去看看小猫准备了什么？</p>
+    <button class="btn" onclick="location.href='./307/'" style="width:100%">前往彩蛋房间 👉</button>
   </div>
 </div>
 
 <script>
-  /* ===== 1. 时间配置 (请确认年份) ===== */
-  // 逻辑：如果是今年12.13还没到，就是今年；如果过了，就是明年。
-  const targetDate = "12-13 00:00:00";
+  /* ================= 配置区 ================= */
+  // 1. 生日日期：自动计算最近的 12-13
+  const targetDateStr = "12-13 00:00:00";
   const now = new Date();
-  const currentYear = now.getFullYear();
-  // 简单的判定：如果当前月份大于12，或者(是12月且过了13号)，则年份+1
-  // 这里直接写死 2025 也可以，或者用动态逻辑
-  let birthdayStr = currentYear + "-" + targetDate;
-  if(now > new Date(birthdayStr.replace(/-/g,'/'))) {
-      birthdayStr = (currentYear+1) + "-" + targetDate;
-  }
-  // 修正：用户指定了 12月13日。
-  const BIRTHDAY = birthdayStr; 
+  let year = now.getFullYear();
+  let bd = new Date(year + "-" + targetDateStr.replace(/-/g,'/'));
+  if(now > bd) bd = new Date((year+1) + "-" + targetDateStr.replace(/-/g,'/'));
+  const BIRTHDAY_DATE = bd;
 
-  /* ===== 2. 文案 (请在此处修改你的18条文案) ===== */
+  // 2. 翻牌文案 (请修改为你给学妹的18句话)
   const WISHES = [
     "愿你永远被温柔以待", "考试顺利，不挂科", "每天都能睡个好觉",
     "吃不胖体质 Get", "快乐是第一生产力", "偶尔迷路也没关系",
@@ -189,139 +274,180 @@
     "既见君子，云胡不喜", "平安喜乐，万事胜意", "十八岁生日快乐！"
   ];
 
-  /* ===== 3. 核心逻辑 ===== */
+  /* ================= 逻辑区 ================= */
   const kittyWrap = document.getElementById('kittyWrap');
   const stage = document.getElementById('stage');
   const musicBtn = document.getElementById('musicBtn');
   const bgm = document.getElementById('bgm');
-  
-  // 音乐播放逻辑
-  let musicPlaying = false;
+  const particles = document.getElementById('particles');
+
+  /* --- 音乐控制 --- */
+  let isPlaying = false;
   function toggleMusic(){
-    if(musicPlaying){ bgm.pause(); musicBtn.classList.remove('playing'); }
-    else { bgm.play(); musicBtn.classList.add('playing'); }
-    musicPlaying = !musicPlaying;
+    if(isPlaying){ bgm.pause(); musicBtn.classList.remove('playing'); }
+    else { bgm.play().catch(()=>{}); musicBtn.classList.add('playing'); }
+    isPlaying = !isPlaying;
   }
   musicBtn.addEventListener('click', toggleMusic);
-  // 触摸屏幕任意位置自动尝试播放一次
-  document.body.addEventListener('click', function firstPlay(){
-    if(!musicPlaying){ toggleMusic(); }
-    document.body.removeEventListener('click', firstPlay);
+  document.body.addEventListener('click', function first(){
+    if(!isPlaying) toggleMusic();
+    document.body.removeEventListener('click', first);
   }, {once:true});
 
-  // 猫咪交互
-  function act(clsName){
-    kittyWrap.classList.add(clsName);
-    setTimeout(()=> kittyWrap.classList.remove(clsName), 1200);
+  /* --- 粒子特效 (点击撒花) --- */
+  function popParticles(x, y, count=12){
+    for(let i=0; i<count; i++){
+      const el = document.createElement('div');
+      el.innerText = ['❤️','✨','🌸','🎀','🎂'][Math.floor(Math.random()*5)];
+      el.style.position = 'fixed';
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      el.style.fontSize = (12 + Math.random()*14) + 'px';
+      el.style.pointerEvents = 'none';
+      el.style.userSelect = 'none';
+      el.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+      particles.appendChild(el);
+
+      // 随机散开方向
+      const angle = Math.random() * 2 * Math.PI;
+      const dist = 60 + Math.random() * 80;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - 60; // 稍微向上飘
+      
+      requestAnimationFrame(()=>{
+        el.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random()*180}deg)`;
+        el.style.opacity = '0';
+      });
+      setTimeout(()=> el.remove(), 1000);
+    }
   }
-  stage.addEventListener('click', ()=>{
-    const acts = ['act-jump', 'act-runL', 'act-runR', 'act-shake'];
-    const random = acts[Math.floor(Math.random()*acts.length)];
-    act(random);
-    // 简单的震动反馈
-    if(navigator.vibrate) navigator.vibrate(20);
+
+  /* --- 猫咪互动 --- */
+  stage.addEventListener('click', (e)=>{
+    // 动作
+    const acts = ['act-jump', 'act-shake'];
+    const cls = acts[Math.floor(Math.random()*acts.length)];
+    kittyWrap.classList.add(cls);
+    setTimeout(()=> kittyWrap.classList.remove(cls), 600);
+    
+    // 特效
+    popParticles(e.clientX, e.clientY, 15);
+    if(navigator.vibrate) navigator.vibrate(30);
   });
 
-  // 翻牌逻辑
+  /* --- 翻牌逻辑 (支持翻回) --- */
   const grid = document.getElementById('grid18');
   const eggBtn = document.getElementById('eggBtn');
-  const STORAGE_KEY = 'bc_flipped_18'; // 存储key
+  const KEY_FLIPPED = 'bc_flipped_v2';
+  const KEY_UNLOCKED = 'bc_egg_unlocked_v2';
   
-  // 读取已翻开的
   let flippedSet = new Set();
-  try{ flippedSet = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []); }catch{}
+  try{ flippedSet = new Set(JSON.parse(localStorage.getItem(KEY_FLIPPED)) || []); }catch{}
 
-  function renderGrid(){
-    grid.innerHTML = '';
-    let count = 0;
-    WISHES.forEach((text, idx)=>{
-      const isFlipped = flippedSet.has(idx);
-      if(isFlipped) count++;
+  // 渲染
+  WISHES.forEach((txt, i) => {
+    const cell = document.createElement('div');
+    cell.className = `card3d ${flippedSet.has(i)?'flipped':''}`;
+    cell.innerHTML = `
+      <div class="card-inner">
+        <div class="face front"><b>${i+1}</b></div>
+        <div class="face back">${txt}</div>
+      </div>
+    `;
+    // 点击事件
+    cell.addEventListener('click', (e)=>{
+      // 粒子
+      popParticles(e.clientX, e.clientY, 6);
       
-      const item = document.createElement('div');
-      item.className = `card3d ${isFlipped?'flipped':''}`;
-      item.innerHTML = `
-        <div class="face front"><b>${idx+1}</b></div>
-        <div class="face back">${text}</div>
-      `;
-      item.onclick = () => toggleCard(item, idx);
-      grid.appendChild(item);
-    });
-    updateStatus(count);
-  }
-  
-  function toggleCard(el, idx){
-    if(el.classList.contains('flipped')){
-       // 也可以设计成翻开就不能盖回去，这里保留可盖回
-       // el.classList.remove('flipped');
-       // flippedSet.delete(idx);
-    } else {
-       el.classList.add('flipped');
-       flippedSet.add(idx);
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...flippedSet]));
-    updateStatus(flippedSet.size);
-  }
-
-  function updateStatus(n){
-    eggBtn.textContent = n>=18 ? "🎁 彩蛋已解锁 (点我进入)" : `🎁 彩蛋（解锁进度 ${n}/18）`;
-    if(n>=18){
-      eggBtn.classList.remove('disabled');
-      // 如果是第一次完成
-      if(!localStorage.getItem('bc_egg_shown')){
-        document.getElementById('achieveModal').classList.add('show');
-        localStorage.setItem('bc_egg_shown', '1');
+      // 翻转逻辑
+      if(cell.classList.contains('flipped')){
+        cell.classList.remove('flipped');
+        flippedSet.delete(i);
+      } else {
+        cell.classList.add('flipped');
+        flippedSet.add(i);
       }
+      
+      localStorage.setItem(KEY_FLIPPED, JSON.stringify([...flippedSet]));
+      checkProgress();
+    });
+    grid.appendChild(cell);
+  });
+
+  function checkProgress(){
+    const n = flippedSet.size;
+    const isUnlocked = localStorage.getItem(KEY_UNLOCKED);
+    
+    // 文字更新
+    eggBtn.textContent = (n>=18 || isUnlocked) 
+      ? "🎁 彩蛋已解锁 (点我进入)" 
+      : `🎁 彩蛋（收集进度 ${n}/18）`;
+      
+    // 状态更新
+    if(n >= 18){
+      if(!isUnlocked){
+        // 首次达成
+        localStorage.setItem(KEY_UNLOCKED, '1');
+        document.getElementById('achieveModal').classList.add('show');
+        // 满屏撒花
+        const w=window.innerWidth, h=window.innerHeight;
+        for(let k=0;k<5;k++) setTimeout(()=> popParticles(w/2, h/2, 20), k*200);
+      }
+      eggBtn.classList.remove('disabled');
+    } else {
+      // 如果曾经解锁过，就不再锁上了，保持开启
+      if(isUnlocked) eggBtn.classList.remove('disabled');
+      else eggBtn.classList.add('disabled');
     }
   }
+  checkProgress(); // 初始化检查
 
-  document.getElementById('randBtn').onclick = () => {
-    // 找一个没翻开的
+  // 随机翻
+  document.getElementById('randBtn').onclick = (e) => {
     const unflip = [];
-    WISHES.forEach((_,i)=>{ if(!flippedSet.has(i)) unflip.push(i); });
+    for(let i=0; i<18; i++) if(!flippedSet.has(i)) unflip.push(i);
+    
     if(unflip.length > 0){
-      const lucky = unflip[Math.floor(Math.random()*unflip.length)];
-      // 模拟点击
-      grid.children[lucky].click();
-      grid.children[lucky].scrollIntoView({behavior:'smooth', block:'center'});
+      const idx = unflip[Math.floor(Math.random()*unflip.length)];
+      grid.children[idx].click(); // 触发点击
+      // 滚动到该位置
+      grid.children[idx].scrollIntoView({behavior:'smooth', block:'center'});
     } else {
+      // 全翻开了，弹个提示
+      popParticles(e.clientX, e.clientY, 10);
       alert("全都翻开啦！快去点彩蛋吧！");
     }
-  };
-
-  /* 打字机效果 */
-  const msg = "今天是你的18岁生日。翻开下面 18 张卡片，收集小猫的祝福吧！";
-  const typeEl = document.getElementById('type');
-  let typeI = 0;
-  function typeWriter(){
-    if(typeI < msg.length){
-      typeEl.textContent += msg.charAt(typeI);
-      typeI++;
-      setTimeout(typeWriter, 50);
-    }
   }
-  setTimeout(typeWriter, 500);
 
-  /* 倒计时 */
-  function tick(){
-    const t = Date.parse(BIRTHDAY) - Date.now();
+  /* --- 倒计时与打字机 --- */
+  function updateTimer(){
+    const diff = BIRTHDAY_DATE - new Date();
     const el = document.getElementById('countdown');
-    if(t<0){
-      el.innerHTML = "<div class='box'><b>🎂</b>Happy Birthday!</div>";
+    if(diff <= 0){
+      el.innerHTML = `<div class="pill">🎂 Happy Birthday!</div>`;
       return;
     }
-    const d=Math.floor(t/86400000), h=Math.floor((t%86400000)/3600000), 
-          m=Math.floor((t%3600000)/60000), s=Math.floor((t%60000)/1000);
+    const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), 
+          m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
     el.innerHTML = `
       <div class="box"><b>${d}</b><span>DAYS</span></div>
-      <div class="box"><b>${h}</b><span>HOURS</span></div>
+      <div class="box"><b>${h}</b><span>HRS</span></div>
       <div class="box"><b>${m}</b><span>MIN</span></div>
       <div class="box"><b>${s}</b><span>SEC</span></div>
     `;
   }
-  setInterval(tick, 1000); tick();
+  setInterval(updateTimer, 1000); updateTimer();
 
-  renderGrid();
+  const msg = "今天是你的18岁生日。翻开下面 18 张卡片，收集小猫的祝福吧！";
+  let i_type = 0;
+  const tEl = document.getElementById('type');
+  function type(){
+    if(i_type < msg.length){
+      tEl.textContent += msg.charAt(i_type++);
+      setTimeout(type, 80);
+    }
+  }
+  setTimeout(type, 600);
+
 </script>
 </body>
 </html>
