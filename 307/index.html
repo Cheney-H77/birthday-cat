@@ -5,193 +5,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <title>🎁 惊喜房间</title>
 <style>
-  /* ===== 1. 全局配置 (与主页统一) ===== */
+  /* ===== 与主页一致的视觉 ===== */
   :root{
-    --tea: #d4b073; 
-    --pink: #ff5c8a; 
-    --cream: #fff9f3;
+    --tea: #d4b073; --pink: #ff5c8a; --cream: #fff9f3;
     --glass: rgba(255, 255, 255, 0.75);
     --glass-border: rgba(255, 255, 255, 0.8);
     --shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   }
-  
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; height: 100%; overflow: hidden;}
-  
-  body{
-    font-family: -apple-system, "SF Pro Text", "微软雅黑", sans-serif;
-    background: #fff9f3;
-    color: #4a4a4a;
-  }
+  body{ font-family: -apple-system, "SF Pro Text", sans-serif; background: #fff9f3; color: #4a4a4a; }
 
-  /* 动态背景光晕 */
-  .ambient-light {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: -1; pointer-events: none;
-  }
-  .orb {
-    position: absolute; border-radius: 50%;
-    filter: blur(50px); opacity: 0.6;
-    animation: float 15s infinite ease-in-out alternate;
-  }
+  .ambient-light { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.6; animation: float 15s infinite ease-in-out alternate; }
   .orb-1 { width: 320px; height: 320px; background: #ffe5ec; top: -60px; left: -60px; }
   .orb-2 { width: 280px; height: 280px; background: #fff3d6; bottom: -40px; right: -40px; animation-delay: -5s; }
-  
   @keyframes float { 0% {transform: translate(0,0)} 100% {transform: translate(30px, 40px)} }
 
-  .wrap {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 20px;
-  }
+  .wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
 
-  /* ===== 2. 毛玻璃卡片 ===== */
   .card {
-    background: var(--glass);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 30px;
-    box-shadow: var(--shadow);
-    padding: 30px 20px;
-    width: 100%; max-width: 420px;
-    text-align: center;
-    position: relative; overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border); border-radius: 30px; box-shadow: var(--shadow);
+    padding: 30px 20px; width: 100%; max-width: 420px; text-align: center; position: relative; overflow: hidden;
   }
-  
   h1 { font-size: 24px; color: #8a6b3f; margin: 0 0 8px; }
   .desc { font-size: 14px; color: #999; margin-bottom: 24px; }
 
-  /* ===== 3. 长按解锁 (猫爪蓄力) ===== */
-  .locker-area {
-    height: 300px; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center;
-    position: relative;
-  }
-  
+  /* 解锁区域 */
+  .locker-area { height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
   .paw-btn {
-    width: 100px; height: 100px;
-    background: #fff; border-radius: 50%;
-    box-shadow: 0 8px 25px rgba(255, 92, 138, 0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 40px; cursor: pointer; position: relative;
-    transition: transform 0.2s; z-index: 2; user-select: none;
+    width: 100px; height: 100px; background: #fff; border-radius: 50%;
+    box-shadow: 0 8px 25px rgba(255, 92, 138, 0.2); display: flex; align-items: center; justify-content: center;
+    font-size: 40px; cursor: pointer; position: relative; transition: transform 0.2s; z-index: 2; user-select: none;
   }
   .paw-btn:active { transform: scale(0.95); }
-  
-  /* 蓄力光环 */
-  .ring {
-    position: absolute; width: 140px; height: 140px;
-    border-radius: 50%; border: 4px solid #ffe5ec;
-    opacity: 0; transform: scale(0.8);
-    pointer-events: none;
-  }
-  .ring.charging {
-    opacity: 1; border-color: var(--pink);
-    transition: transform 2s linear;
-    transform: scale(1.1); /* 蓄力时变大 */
-  }
-  
-  .hint { margin-top: 20px; font-size: 14px; color: #aaa; transition: opacity 0.3s;}
+  .ring { position: absolute; width: 140px; height: 140px; border-radius: 50%; border: 4px solid #ffe5ec; opacity: 0; transform: scale(0.8); pointer-events: none; }
+  .ring.charging { opacity: 1; border-color: var(--pink); transition: transform 2s linear; transform: scale(1.1); }
+  .hint { margin-top: 20px; font-size: 14px; color: #aaa; }
 
-  /* ===== 4. 转盘 (马卡龙风格) ===== */
-  .wheel-area {
-    display: none; /* 初始隐藏 */
-    flex-direction: column; align-items: center;
-    animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
+  /* 转盘区域 */
+  .wheel-area { display: none; flex-direction: column; align-items: center; animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes popUp { from{opacity:0; transform: scale(0.8)} to{opacity:1; transform: scale(1)} }
-
-  .wheel-wrap {
-    position: relative; width: 280px; height: 280px;
-    margin-bottom: 20px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
-  }
-  
+  .wheel-wrap { position: relative; width: 280px; height: 280px; margin-bottom: 20px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); }
   .wheel {
-    width: 100%; height: 100%; border-radius: 50%;
-    border: 8px solid #fff; overflow: hidden;
-    position: relative;
-    /* 5个扇区背景：用 conic-gradient 实现 */
-    background: conic-gradient(
-      #ffe5ec 0deg 72deg, 
-      #fff9f3 72deg 144deg, 
-      #ffe5ec 144deg 216deg, 
-      #fff9f3 216deg 288deg, 
-      #ffe5ec 288deg 360deg
-    );
-    transform: rotate(0deg); /* 旋转目标 */
-    /* 贝塞尔曲线：先慢后快再慢，模拟真实阻力 */
-    transition: transform 3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+    width: 100%; height: 100%; border-radius: 50%; border: 8px solid #fff; overflow: hidden; position: relative;
+    background: conic-gradient(#ffe5ec 0deg 72deg, #fff9f3 72deg 144deg, #ffe5ec 144deg 216deg, #fff9f3 216deg 288deg, #ffe5ec 288deg 360deg);
+    transition: transform 3s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-
-  /* 分割线 */
-  .line {
-    position: absolute; top: 0; left: 50%; width: 2px; height: 50%;
-    background: rgba(255,255,255,0.6); transform-origin: bottom center;
-  }
-
-  /* 奖品文字 */
-  .label {
-    position: absolute; top: 0; left: 50%; width: 20px; height: 50%;
-    transform-origin: bottom center;
-    text-align: center; padding-top: 15px;
-    font-size: 13px; font-weight: bold; color: #d4b073;
-    writing-mode: vertical-rl; /* 竖排文字 */
-    pointer-events: none;
-  }
-
-  /* 指针 (猫爪形状模拟) */
-  .pointer {
-    position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
-    z-index: 10; width: 40px; height: 40px;
-    background: #fff; border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    display: flex; align-items: center; justify-content: center; font-size: 20px;
-  }
-  .pointer::after {
-    content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
-    border-left: 8px solid transparent; border-right: 8px solid transparent;
-    border-top: 10px solid #fff;
-  }
-
-  .spin-btn {
-    background: var(--pink); color: #fff; border: none;
-    padding: 12px 32px; border-radius: 99px; font-size: 16px; font-weight: bold;
-    box-shadow: 0 8px 20px rgba(255, 92, 138, 0.3);
-    transition: transform 0.1s;
-  }
+  .line { position: absolute; top: 0; left: 50%; width: 2px; height: 50%; background: rgba(255,255,255,0.6); transform-origin: bottom center; }
+  .label { position: absolute; top: 0; left: 50%; width: 20px; height: 50%; transform-origin: bottom center; text-align: center; padding-top: 15px; font-size: 13px; font-weight: bold; color: #d4b073; writing-mode: vertical-rl; pointer-events: none; }
+  .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 10; width: 40px; height: 40px; background: #fff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .pointer::after { content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #fff; }
+  .spin-btn { background: var(--pink); color: #fff; border: none; padding: 12px 32px; border-radius: 99px; font-size: 16px; font-weight: bold; box-shadow: 0 8px 20px rgba(255, 92, 138, 0.3); transition: transform 0.1s; }
   .spin-btn:active { transform: scale(0.95); }
   .spin-btn:disabled { opacity: 0.5; background: #ccc; box-shadow: none; }
 
-  /* ===== 5. 弹窗与特效 ===== */
-  .modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(5px); z-index: 100;
-    display: none; align-items: center; justify-content: center;
-  }
+  /* 弹窗 */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; }
   .modal.show { display: flex; animation: fadeIn 0.3s; }
-  .modal-inner {
-    background: #fff; padding: 30px; border-radius: 24px;
-    text-align: center; max-width: 300px; width: 85%;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    transform: scale(0.9); animation: popModal 0.4s cubic-bezier(0.17, 0.67, 0.3, 1.2) forwards;
-  }
+  .modal-inner { background: #fff; padding: 30px; border-radius: 24px; text-align: center; max-width: 300px; width: 85%; transform: scale(0.9); animation: popModal 0.4s forwards; }
   @keyframes popModal { to {transform: scale(1)} }
-  
   .result-text { font-size: 18px; color: var(--pink); font-weight: bold; margin: 15px 0 20px; line-height: 1.5; }
-  .close-btn { 
-    background: #f0f0f0; color: #666; padding: 10px 24px; border-radius: 99px; 
-    border: none; font-weight: bold; cursor: pointer; 
-  }
-
+  .close-btn { background: #f0f0f0; color: #666; padding: 10px 24px; border-radius: 99px; border: none; font-weight: bold; cursor: pointer; }
   .particles { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
 </style>
 </head>
 <body>
 
-<div class="ambient-light">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-</div>
+<div class="ambient-light"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
 
 <div class="wrap">
   <div class="card">
@@ -212,7 +94,6 @@
           <div class="line" style="transform: rotate(144deg)"></div>
           <div class="line" style="transform: rotate(216deg)"></div>
           <div class="line" style="transform: rotate(288deg)"></div>
-          
           <div class="label" style="transform: rotate(36deg)">再来一次</div>
           <div class="label" style="transform: rotate(108deg)">一杯奶茶</div>
           <div class="label" style="transform: rotate(180deg)">小猫玩偶</div>
@@ -220,7 +101,6 @@
           <div class="label" style="transform: rotate(324deg)">给糖豆找<br>一个玩伴</div>
         </div>
       </div>
-      
       <button class="spin-btn" id="spinBtn">开始转动</button>
       <div style="margin-top:15px; font-size:13px; color:#aaa" id="chanceInfo">剩余机会：2</div>
     </div>
@@ -234,7 +114,6 @@
     <button class="close-btn" id="closeModal">收下礼物</button>
   </div>
 </div>
-
 <div class="particles" id="particles"></div>
 
 <audio id="bgm" loop>
@@ -242,29 +121,21 @@
 </audio>
 
 <script>
-  /* ================= 配置 ================= */
-  // 奖品配置 (必须与 HTML 里的顺序对应)
-  // 角度是顺时针方向，指针在正上方。
-  // 0-72: 再来一次
-  // 72-144: 奶茶
-  // 144-216: 玩偶
-  // 216-288: 我好开心
-  // 288-360: 给糖豆找玩伴
+  /* ===== 修复 BGM 问题的关键逻辑 ===== */
+  // 核心思想：利用touchstart事件“解锁”音频对象
+  
   const PRIZES = [
     { text: "再来一次", min: 0, max: 72 },
     { text: "一杯奶茶", min: 72, max: 144 },
     { text: "小猫玩偶", min: 144, max: 216 },
-    { text: "对我说：我好开心！", min: 216, max: 288 }, // 目标2 (Index 3)
-    { text: "给糖豆找一个玩伴", min: 288, max: 360 }    // 目标1 (Index 4)
+    { text: "对我说：我好开心！", min: 216, max: 288 },
+    { text: "给糖豆找一个玩伴", min: 288, max: 360 }
   ];
-  
-  // 剧本逻辑：第1次必中 Index 4，第2次必中 Index 3
   const SCRIPT = [4, 3]; 
 
-  /* ================= 状态管理 (内存级，不存 LocalStorage) ================= */
   let isUnlocked = false;
   let spinCount = 0;
-  let currentRotation = 0; // 记录当前转过的角度
+  let currentRotation = 0;
   
   const locker = document.getElementById('locker');
   const wheelArea = document.getElementById('wheelArea');
@@ -276,19 +147,21 @@
   const statusText = document.getElementById('statusText');
   const bgm = document.getElementById('bgm');
 
-  /* ================= 1. 解锁逻辑 ================= */
+  /* 解锁逻辑：带音频Hack */
   let holdTimer = null;
-  let startTime = 0;
   
   function startHold(e){
-    e.preventDefault(); // 防止手机端长按选中文本
+    e.preventDefault(); 
     if(isUnlocked) return;
     
-    startTime = Date.now();
+    // 关键修复 1: 触摸开始时，立刻播放（静音状态）
+    // 这告诉 iOS："用户确实点了一下，允许这个音频播放"
+    bgm.muted = true; 
+    bgm.play().catch(e => console.log("Audio init fail:", e));
+
     holdBtn.style.transform = "scale(0.9)";
-    ring.classList.add('charging'); // 开始CSS动画
+    ring.classList.add('charging');
     
-    // 2秒后解锁
     holdTimer = setTimeout(() => {
       unlockSuccess();
     }, 2000);
@@ -298,60 +171,46 @@
     if(isUnlocked) return;
     clearTimeout(holdTimer);
     holdBtn.style.transform = "scale(1)";
-    ring.classList.remove('charging'); // 动画取消
+    ring.classList.remove('charging');
+    
+    // 如果还没解锁就松手了，暂停音乐并重置进度
+    bgm.pause();
+    bgm.currentTime = 0;
   }
 
   function unlockSuccess(){
     isUnlocked = true;
     if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
     
-    // 播放音乐 (利用用户的交互事件触发)
-    bgm.play().catch(()=>{});
-
-    // 视觉切换
+    // 关键修复 2: 解锁成功，取消静音，音乐自然流出
+    bgm.muted = false;
+    
     locker.style.display = 'none';
     wheelArea.style.display = 'flex';
     statusText.textContent = "转动猫爪 抽取礼物";
-    
-    // 撒花特效
     fireConfetti();
   }
 
-  // 绑定触摸/鼠标事件
   holdBtn.addEventListener('mousedown', startHold);
   holdBtn.addEventListener('touchstart', startHold);
-  
   ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev => {
     holdBtn.addEventListener(ev, cancelHold);
   });
 
-  /* ================= 2. 转盘逻辑 ================= */
+  /* 转盘与特效逻辑 (保持不变) */
   spinBtn.addEventListener('click', () => {
     if(spinCount >= SCRIPT.length) return;
-    
-    // 禁用按钮
     spinBtn.disabled = true;
     spinBtn.textContent = "转动中...";
 
-    // 获取剧本目标
     const targetIndex = SCRIPT[spinCount];
     const targetPrize = PRIZES[targetIndex];
-    
-    // 计算角度
-    // 我们需要指针指在 [min, max] 之间。
-    // 因为 wheel 旋转是顺时针，指针在正上方(0度)，
-    // 所以要让某个扇区转到正上方，需要旋转： 360 - (扇区中心角度)
     const centerAngle = (targetPrize.min + targetPrize.max) / 2;
-    const rotateAngle = 360 - centerAngle; // 目标相对角度
-    
-    // 多转 5 圈 (1800度) + 目标角度 + 加上之前的累积角度
+    const rotateAngle = 360 - centerAngle;
     const extraSpins = 360 * 5;
     currentRotation += (extraSpins + rotateAngle - (currentRotation % 360));
     
-    // CSS 旋转
     wheel.style.transform = `rotate(${currentRotation}deg)`;
-
-    // 监听动画结束 (3s 后)
     setTimeout(() => {
       showResult(targetPrize.text);
       spinCount++;
@@ -363,58 +222,38 @@
   function updateChance(){
     const left = Math.max(0, 2 - spinCount);
     chanceInfo.textContent = `剩余机会：${left}`;
-    if(left === 0){
-      spinBtn.textContent = "机会用完了";
-      spinBtn.disabled = true;
-    } else {
-      spinBtn.textContent = "开始转动";
-    }
+    if(left === 0) { spinBtn.textContent = "机会用完了"; spinBtn.disabled = true; }
+    else { spinBtn.textContent = "开始转动"; }
   }
 
-  /* ================= 3. 结果与特效 ================= */
   const modal = document.getElementById('resultModal');
   const resultContent = document.getElementById('resultContent');
-  const closeModal = document.getElementById('closeModal');
+  document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('show'));
 
   function showResult(text){
-    resultContent.innerHTML = text; // 支持换行
+    resultContent.innerHTML = text;
     modal.classList.add('show');
-    fireConfetti(); // 再次撒花
+    fireConfetti();
     if(navigator.vibrate) navigator.vibrate(100);
   }
 
-  closeModal.addEventListener('click', () => {
-    modal.classList.remove('show');
-  });
-
-  // 粒子系统 (复用主页的简单版)
   function fireConfetti(){
     const colors = ['#ff5c8a', '#d4b073', '#74c0fc', '#a9e34b'];
     const pContainer = document.getElementById('particles');
-    
     for(let i=0; i<60; i++){
       const el = document.createElement('div');
       el.style.position = 'fixed';
       el.style.width = '8px'; el.style.height = '12px';
       el.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
-      el.style.left = Math.random()*100 + 'vw';
-      el.style.top = '-20px';
-      el.style.zIndex = '999';
-      el.style.borderRadius = '2px';
-      
-      // 随机下落动画
+      el.style.left = Math.random()*100 + 'vw'; el.style.top = '-20px'; el.style.zIndex = '999'; el.style.borderRadius = '2px';
       const duration = 2 + Math.random() * 2;
       el.style.transition = `top ${duration}s ease-in, transform ${duration}s linear, opacity ${duration}s ease-in`;
       pContainer.appendChild(el);
-
-      // 下一帧触发动画
       requestAnimationFrame(() => {
         el.style.top = '110vh';
         el.style.transform = `rotate(${Math.random()*720}deg) translateX(${Math.random()*40-20}px)`;
         el.style.opacity = '0';
       });
-
-      // 清理
       setTimeout(() => el.remove(), duration*1000);
     }
   }
